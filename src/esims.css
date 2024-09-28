@@ -1,0 +1,504 @@
+@font-face {
+    font-family: "dashboard";
+    src: url("https://eadmitere.uaic.ro/fonts/dashboard.eot");
+    src: url("https://eadmitere.uaic.ro/fonts/dashboard.eot?#iefix") format("embedded-opentype"),
+    url("https://eadmitere.uaic.ro/fonts/dashboard.woff") format("woff"),
+    url("https://eadmitere.uaic.ro/fonts/dashboard.ttf") format("truetype"),
+    url("https://eadmitere.uaic.ro/fonts/dashboard.svg#dashboard") format("svg");
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* general layout */
+html,
+body {
+    height: 100%;
+    margin: 0;
+    background: none;
+}
+
+body {
+    background-image: url(https://eadmitere.uaic.ro/img/bg.jpg);
+    background-repeat: repeat;
+    backdrop-filter: blur(3px);
+}
+
+#new-banner {
+    background-color: #003756;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+#banner-dark {
+    display: none;
+}
+
+[data-darkreader-scheme="dark"] {
+    body {
+        background: none;
+    }
+
+    #new-banner {
+        background-color: #000000;
+    }
+
+    #banner-dark {
+        display: initial;
+    }
+
+    #banner-light {
+        display: none;
+    }
+}
+
+/* Header and related */
+#header {
+    height: 48px;
+    margin: 0 auto;
+    width: 620px;
+}
+
+#logo {
+    display: flex;
+    justify-content: center;
+    position: initial;
+    /* override preset position */
+}
+
+/* NAVbar & buttons */
+#table-replacement {
+    display: flex;
+    justify-content: flex-end;
+}
+
+#main-page-button,
+#password-recovery-button {
+    padding: 8px 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+}
+
+#main-page-button {
+    width: 100%;
+    justify-content: space-around;
+    font-family: inherit;
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.1;
+    background: none;
+    color: rgb(37, 197, 255);
+}
+
+#search {
+    position: unset;
+}
+
+#search,
+#login-page-button {
+    width: 100%;
+    display: flex;
+}
+
+#mainnav {
+    border: none;
+    background: none;
+    padding: 0;
+}
+
+button.home img {
+    width: 1.695em;
+    height: 1.5em;
+    margin-right: 8px;
+    color: rgb(37, 197, 255)
+}
+
+button.account {
+    background-color: #003756;
+    color: #FFF;
+}
+
+#mainnav button {
+    border: none;
+    padding: 8px 12px;
+    font-size: 10pt;
+    cursor: pointer;
+    margin: 5px 5px;
+    border-radius: 4px;
+}
+
+div#user {
+    display: flex;
+    justify-content: center;
+}
+
+/* Main content & Sidebars */
+[data-darkreader-scheme="dark"] {
+    .sidebarcontainer h4 {
+        color: #cccccc
+    }
+
+    #wrapper {
+        box-shadow: 0px 0px 10px rgba(255, 255, 255, .5);
+        background-color: #000000;
+    }
+}
+
+#wrapper {
+    background-image: none;
+    background-color: #FFFFFF;
+    width: 620px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 1200px;
+    padding: 20px;
+    box-shadow: 0px 4px 12px rgba(0, 55, 86, .6);
+    border: none;
+    display: flex;
+}
+
+#floatwrapper {
+    display: flex;
+    width: auto;
+    float: none;
+}
+
+#contentwrapper {
+    border: none;
+    margin: 0;
+    width: auto;
+}
+
+#leftcolcontainer {
+    width: 100%;
+}
+
+#leftcolumn {
+    padding: 20px;
+    margin: -20px 20px -20px -20px;
+    width: fit-content;
+    background-color: #054164;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+
+#leftcolumn #emblem {
+    width: 100%;
+}
+
+#subnav {
+    margin: 0;
+}
+
+#centercolumn {
+    padding-top: 0;
+    width: auto;
+    margin: 0;
+}
+
+.sidebarcontainer {
+    padding: 6px;
+    background: none;
+    border: none;
+    font-size: unset;
+    /*border-radius: 8px;*/
+}
+
+.sidebarcontainer h4 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    border-bottom: 2px solid #ffffff36;
+    /* Underline the title */
+    padding-bottom: 5px;
+    color: white;
+}
+
+.sidebarcontainer ul {
+    list-style: none;
+    padding-left: 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.sidebarcontainer ul li {
+    margin: 10px 0;
+    position: relative;
+    font-size: 16px;
+}
+
+.sidebarcontainer a {
+    text-decoration: none;
+    color: white;
+    font-size: 16px;
+}
+
+.sidebarcontainer a svg {
+    margin-left: 0.5em;
+    width: 12px;
+}
+
+.sidebarcontainer a:hover {
+    text-decoration: underline;
+}
+
+.sidebarcontainer br {
+    display: none;
+}
+
+#news-section,
+#quick-links {
+    margin-bottom: 20px;
+    text-align: center !important;
+}
+
+#rightcolcontainer {
+    display: none;
+}
+
+#right-sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+#right-sidebar:has(#contentwrapper > #floatwrapper > #centercolumn > #copy > #loginregister),
+#right-sidebar:has(#ctl00_mainCopy_Login1 > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(1) > label:nth-child(1)),
+#right-sidebar:has(#login-div) {
+    justify-content: space-between;
+}
+/* main content */
+#centercolumn #copy .container {
+    border: none;
+    background: none;
+}
+
+#centercolumn #copy .container h5 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: #333;
+    border-bottom: 2px solid #054164;
+    /* Underline the title */
+    padding-bottom: 5px;
+}
+
+#centercolumn #copy .container ul {
+    list-style: none;
+    padding-left: 0;
+    font-size: 16px;
+    color: #333;
+}
+
+[data-darkreader-scheme="dark"] {
+    #centercolumn #copy .container ul,
+    #centercolumn #copy .container h5 {
+        color: #FFF;
+    }
+}
+
+#centercolumn #copy .container ul li {
+    margin: 10px 0;
+    position: relative;
+    padding-left: 20px;
+}
+
+#centercolumn #copy .container ul li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #054164;
+    /* Custom bullet color */
+    font-size: 20px;
+}
+
+div.container:nth-child(2) {
+    display: none;
+}
+
+div.container:nth-child(1) > h5:nth-child(5) {
+    color: red !important;
+}
+
+/* Footer */
+#footer {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    z-index: 10;
+    border: none;
+    margin: 0;
+    padding: 0;
+    background: none;
+    color: white;
+}
+
+/* Passowrd Recovery Page */
+[data-darkreader-scheme="dark"] {
+    legend {
+        color: #FFF !important;
+    }
+}
+
+#loginregister,
+#login-div {
+    width: 316px;
+}
+
+fieldset {
+    margin: 0 !important;
+    border: none !important;
+}
+
+legend {
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+#password-recovery-form {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.txtBox {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#submit-button {
+    padding: 10px 20px;
+    background-color: hsl(0, 84%, 62%);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#submit-button:hover {
+    background-color: #a00000;
+}
+
+.required {
+    color: red;
+    font-size: 12px;
+}
+
+.form-error {
+    color: red;
+    margin-top: 10px;
+}
+
+/* Login Page */
+#login-form {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+#login-div label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.submit {
+    padding: 10px 20px;
+    background-color: hsl(0, 84%, 56%);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+}
+
+.submit:hover {
+    background-color: hsl(0, 84%, 62%);
+}
+
+#create-account {
+    padding: 10px 10px;
+    background-color: #054164;
+    width: 100%;
+}
+
+login-div a {
+    color: hsl(0, 84%, 62%);
+    text-decoration: none;
+}
+
+login-div a:hover {
+    text-decoration: underline;
+}
+
+login-div .required {
+    color: red;
+    font-size: 12px;
+}
+
+div.form-group:nth-child(4) {
+    display: flex;
+}
+
+/* Register Page */
+#register-notice {
+    color: red !important;
+    font-size: medium;
+    font-weight: bold;
+    height: 23px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+button#register {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 16px;
+    width: 100%;
+}
+
+button:hover#register {
+    background-color: #45a049;
+}
