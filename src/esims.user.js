@@ -2,20 +2,55 @@
 // @name        esims beautify
 // @namespace   Violentmonkey Scripts
 // @match       *://simsweb.uaic.ro/*
-// @grant       none
+// @grant       GM.xmlHttpRequest
+// @grant       GM_setValue
+// @grant       GM_getValue
 // @version     1.0
 // @author      @driedpampas
 // @description 9/26/2024, 5:00:24 PM
 // ==/UserScript==
 
-(function() {
-    'use strict';
+(function () {
+    "use strict";
+
+    async function fetchSvgContent(id) {
+        try {
+            const url = "https://dry.nl.eu.org/esims-svg/" + id;
+            // Fetch the SVG content from the given URL with the custom header
+            const response = await fetch(url, {
+                headers: {
+                    "Sec-Fetch-Site": "cross-site",
+                },
+            });
+
+            // Check if the response is OK (status code in the range 200-299)
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+
+            // Convert the response to text
+            const svgContent = await response.text();
+
+            // Return the SVG content
+            return svgContent;
+        } catch (error) {
+            // Handle any errors that occurred during the fetch
+            console.error(
+                "There was a problem with the fetch operation:",
+                error
+            );
+            throw error; // Re-throw the error to be handled by the caller
+        }
+    }
 
     // Wait until the DOM is fully loaded
-    window.addEventListener('load', function() {
-
+    window.addEventListener("load", function () {
         // Create a new doctype
-        const newDoctype = document.implementation.createDocumentType('html', '', '');
+        const newDoctype = document.implementation.createDocumentType(
+            "html",
+            "",
+            ""
+        );
         // Replace the current doctype
         if (document.doctype) {
             document.replaceChild(newDoctype, document.doctype);
@@ -23,7 +58,7 @@
             document.insertBefore(newDoctype, document.childNodes[0]);
         }
 
-        const aspNET = document.querySelector('#aspnetForm');
+        const aspNET = document.querySelector("#aspnetForm");
 
         if (aspNET && aspNET.tagName === "FORM") {
             // Create a new div
@@ -39,42 +74,48 @@
             aspNET.parentNode.replaceChild(divWrapper, aspNET);
         }
 
-
-        const mainNav = document.querySelector('#mainnav');
+        const mainNav = document.querySelector("#mainnav");
 
         // Replace table element inside #mainnav with a custom div
-        const tableElement = mainNav.querySelector('table');
+        const tableElement = mainNav.querySelector("table");
 
         if (tableElement) {
             // Create new div with buttons
-            const newDiv = document.createElement('div');
-            newDiv.setAttribute('id', 'table-replacement');
+            const newDiv = document.createElement("div");
+            newDiv.setAttribute("id", "table-replacement");
 
             // Create the first button
-            const button1 = document.createElement('button');
-            button1.textContent = 'Pagina principală';
-            button1.setAttribute('id', 'main-page-button');
-            button1.setAttribute('onclick', "window.location.href='/eSIMS/Default.aspx'");
-            button1.setAttribute('class', 'home');
+            const button1 = document.createElement("button");
+            button1.textContent = "Pagina principală";
+            button1.setAttribute("id", "main-page-button");
+            button1.setAttribute(
+                "onclick",
+                "window.location.href='/eSIMS/Default.aspx'"
+            );
+            button1.setAttribute("class", "home");
 
-            // Create an SVG icon as base64
-            const svgBase64 = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgdmlld0JveD0iMCAwIDI0IDI0IgogICB3aWR0aD0iMjRweCIKICAgaGVpZ2h0PSIyNHB4IgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmcxIgogICBzb2RpcG9kaTpkb2NuYW1lPSJpY29uczgtaG9tZS0yNC1saWdodC5zdmciCiAgIGlua3NjYXBlOnZlcnNpb249IjEuMy4yICgwOTFlMjBlZjBmLCAyMDIzLTExLTI1KSIKICAgeG1sbnM6aW5rc2NhcGU9Imh0dHA6Ly93d3cuaW5rc2NhcGUub3JnL25hbWVzcGFjZXMvaW5rc2NhcGUiCiAgIHhtbG5zOnNvZGlwb2RpPSJodHRwOi8vc29kaXBvZGkuc291cmNlZm9yZ2UubmV0L0RURC9zb2RpcG9kaS0wLmR0ZCIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICB4bWxuczpzdmc9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcwogICAgIGlkPSJkZWZzMSIgLz4KICA8c29kaXBvZGk6bmFtZWR2aWV3CiAgICAgaWQ9Im5hbWVkdmlldzEiCiAgICAgcGFnZWNvbG9yPSIjNTA1MDUwIgogICAgIGJvcmRlcmNvbG9yPSIjZWVlZWVlIgogICAgIGJvcmRlcm9wYWNpdHk9IjEiCiAgICAgaW5rc2NhcGU6c2hvd3BhZ2VzaGFkb3c9IjAiCiAgICAgaW5rc2NhcGU6cGFnZW9wYWNpdHk9IjAiCiAgICAgaW5rc2NhcGU6cGFnZWNoZWNrZXJib2FyZD0iMCIKICAgICBpbmtzY2FwZTpkZXNrY29sb3I9IiM1MDUwNTAiCiAgICAgaW5rc2NhcGU6em9vbT0iMzMuNjY2NjY3IgogICAgIGlua3NjYXBlOmN4PSIxMiIKICAgICBpbmtzY2FwZTpjeT0iMTIiCiAgICAgaW5rc2NhcGU6d2luZG93LXdpZHRoPSIxOTIwIgogICAgIGlua3NjYXBlOndpbmRvdy1oZWlnaHQ9IjEwMTQiCiAgICAgaW5rc2NhcGU6d2luZG93LXg9IjAiCiAgICAgaW5rc2NhcGU6d2luZG93LXk9IjAiCiAgICAgaW5rc2NhcGU6d2luZG93LW1heGltaXplZD0iMSIKICAgICBpbmtzY2FwZTpjdXJyZW50LWxheWVyPSJzdmcxIiAvPgogIDxwYXRoCiAgICAgZD0iTSAxMiAyIEEgMSAxIDAgMCAwIDExLjI4OTA2MiAyLjI5Njg3NSBMIDEuMjAzMTI1IDExLjA5NzY1NiBBIDAuNSAwLjUgMCAwIDAgMSAxMS41IEEgMC41IDAuNSAwIDAgMCAxLjUgMTIgTCA0IDEyIEwgNCAyMCBDIDQgMjAuNTUyIDQuNDQ4IDIxIDUgMjEgTCA5IDIxIEMgOS41NTIgMjEgMTAgMjAuNTUyIDEwIDIwIEwgMTAgMTQgTCAxNCAxNCBMIDE0IDIwIEMgMTQgMjAuNTUyIDE0LjQ0OCAyMSAxNSAyMSBMIDE5IDIxIEMgMTkuNTUyIDIxIDIwIDIwLjU1MiAyMCAyMCBMIDIwIDEyIEwgMjIuNSAxMiBBIDAuNSAwLjUgMCAwIDAgMjMgMTEuNSBBIDAuNSAwLjUgMCAwIDAgMjIuNzk2ODc1IDExLjA5NzY1NiBMIDEyLjcxNjc5NyAyLjMwMjczNDQgQSAxIDEgMCAwIDAgMTIuNzEwOTM4IDIuMjk2ODc1IEEgMSAxIDAgMCAwIDEyIDIgeiIKICAgICBpZD0icGF0aDEiCiAgICAgc3R5bGU9ImZpbGw6I2ZmZmZmZjtmaWxsLW9wYWNpdHk6MSIgLz4KPC9zdmc+Cg==";
+            fetchSvgContent(`home-icon`)
+                .then((svgContent) => {
+                    // Create the image element for the base64 icon
+                    const icon = document.createElement("img");
+                    icon.setAttribute("src", svgContent);
+                    icon.setAttribute("alt", "Home Icon");
 
-            // Create the image element for the base64 icon
-            const icon = document.createElement('img');
-            icon.setAttribute('src', svgBase64);
-            icon.setAttribute('alt', 'Home Icon');
-
-            // Append the icon to the first button
-            button1.prepend(icon); // Add the icon before the text
+                    // Append the icon to the first button
+                    button1.prepend(icon); // Add the icon before the text
+                })
+                .catch((error) => {
+                    console.error("Error fetching SVG content:", error);
+                });
 
             // Create the second button
-            const button2 = document.createElement('button');
-            button2.textContent = 'Recuperare parolă';
-            button2.setAttribute('id', 'password-recovery-button');
-            button2.setAttribute('class', 'account');
-            button2.addEventListener('click', function() {
-                window.location.href = 'https://simsweb.uaic.ro/eSIMS/RecoverPassword.aspx';
+            const button2 = document.createElement("button");
+            button2.textContent = "Recuperare parolă";
+            button2.setAttribute("id", "password-recovery-button");
+            button2.setAttribute("class", "account");
+            button2.addEventListener("click", function () {
+                window.location.href =
+                    "https://simsweb.uaic.ro/eSIMS/RecoverPassword.aspx";
             });
 
             // Append buttons to the div
@@ -85,14 +126,16 @@
             tableElement.replaceWith(newDiv);
         }
 
-
-        const tableReplacement = document.querySelector('#table-replacement');
-        const searchElement = document.querySelector('#search');
+        const tableReplacement = document.querySelector("#table-replacement");
+        const searchElement = document.querySelector("#search");
 
         if (searchElement) {
             // Remove any random text nodes in the #search element
-            searchElement.childNodes.forEach(node => {
-                if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '') {
+            searchElement.childNodes.forEach((node) => {
+                if (
+                    node.nodeType === Node.TEXT_NODE &&
+                    node.textContent.trim() !== ""
+                ) {
                     node.remove(); // Remove the text node if it's not empty
                 }
             });
@@ -104,15 +147,16 @@
         }
 
         // Transform Login link into a button if its content is "Login"
-        const loginLink = searchElement.querySelector('a');
+        const loginLink = searchElement.querySelector("a");
 
-        if (loginLink && loginLink.textContent.trim() === 'Login') {
-            const loginButton = document.createElement('button');
-            loginButton.textContent = 'Login';
-            loginButton.setAttribute('id', 'login-page-button');
-            loginButton.setAttribute('class', 'account');
-            loginButton.addEventListener('click', function() {
-                window.location.href = 'https://simsweb.uaic.ro/eSIMS/MyLogin.aspx?ReturnUrl=%2feSIMS%2fdefault.aspx';
+        if (loginLink && loginLink.textContent.trim() === "Login") {
+            const loginButton = document.createElement("button");
+            loginButton.textContent = "Login";
+            loginButton.setAttribute("id", "login-page-button");
+            loginButton.setAttribute("class", "account");
+            loginButton.addEventListener("click", function () {
+                window.location.href =
+                    "https://simsweb.uaic.ro/eSIMS/MyLogin.aspx?ReturnUrl=%2feSIMS%2fdefault.aspx";
             });
 
             // Replace the link with the button
@@ -121,22 +165,22 @@
 
         // Move around account related stuff
         if (tableReplacement) {
-            const newDiv = document.createElement('div');
-            newDiv.id = 'user';
+            const newDiv = document.createElement("div");
+            newDiv.id = "user";
 
             // Append the new div to the target div
             tableReplacement.appendChild(newDiv);
 
             // Select the buttons you want to move
-            const button1 = document.querySelector('#password-recovery-button');
-            const button2 = document.querySelector('#search'); // cause what happens when I'm logged in?
+            const button1 = document.querySelector("#password-recovery-button");
+            const button2 = document.querySelector("#search"); // cause what happens when I'm logged in?
 
             // Move the buttons to the new div
             newDiv.appendChild(button1);
             newDiv.appendChild(button2);
         }
 
-        const centerColumn = document.querySelector('#centercolumn');
+        const centerColumn = document.querySelector("#centercolumn");
         if (centerColumn) {
             // Get the parent element
             const parentElement = centerColumn.parentElement;
@@ -146,53 +190,63 @@
         }
 
         // Move the Main Page Button "above" the left column
-        const mainPageButton = document.querySelector('#main-page-button');
-        const leftColumn = document.querySelector('#leftcolumn');
-        const leftColumnContainer = document.querySelector('#leftcolcontainer');
+        const mainPageButton = document.querySelector("#main-page-button");
+        const leftColumn = document.querySelector("#leftcolumn");
+        const leftColumnContainer = document.querySelector("#leftcolcontainer");
         if (mainPageButton && leftColumn && leftColumnContainer) {
-            const icon = document.createElement('img');
-            icon.setAttribute('src', 'https://eadmitere.uaic.ro/img/logo/ro/logo-no-auth.png');
-            icon.setAttribute('alt', 'Emblem');
-            icon.setAttribute('id', 'emblem');
+            const icon = document.createElement("img");
+            icon.setAttribute(
+                "src",
+                "https://eadmitere.uaic.ro/img/logo/ro/logo-no-auth.png"
+            );
+            icon.setAttribute("alt", "Emblem");
+            icon.setAttribute("id", "emblem");
             leftColumn.appendChild(icon);
             leftColumn.appendChild(mainPageButton);
             leftColumn.appendChild(leftColumnContainer);
         }
 
-        const wrapperEL = document.querySelector('#wrapper');
-        const contentWrapper = document.querySelector('#contentwrapper')
-        wrapperEL.insertBefore
+        const wrapperEL = document.querySelector("#wrapper");
+        const contentWrapper = document.querySelector("#contentwrapper");
+        wrapperEL.insertBefore;
         if (wrapperEL) {
             wrapperEL.prepend(leftColumn);
 
-            const newDivContainer = document.createElement('div');
-            newDivContainer.setAttribute('id', 'right-sidebar');
+            const newDivContainer = document.createElement("div");
+            newDivContainer.setAttribute("id", "right-sidebar");
 
             newDivContainer.appendChild(mainNav);
-            newDivContainer.appendChild(contentWrapper);
+            if (contentWrapper) {
+                newDivContainer.appendChild(contentWrapper);
+            } else {
+                console.warn("contentWrapper element not found!");
+            }
 
             wrapperEL.appendChild(newDivContainer);
         }
 
         // Edit the Footer
-        const footerEl = document.querySelector('#footer');
-        footerEl.textContent = '© 2005 «eSIMS» Developers | Beautified ✨ by @driedpampas, 2024';
+        const footerEl = document.querySelector("#footer");
+        footerEl.textContent =
+            "© 2005 «eSIMS» Developers | Beautified ✨ by @driedpampas, 2024";
         aspNET.appendChild(footerEl);
 
         // Remove "»" from <a> elements in the sidebar
-        const sidebarContainer = document.querySelector('#leftcolcontainer > div:nth-child(2).sidebarcontainer');
+        const sidebarContainer = document.querySelector(
+            "#leftcolcontainer > div:nth-child(2).sidebarcontainer"
+        );
         if (sidebarContainer) {
+            const links = sidebarContainer.querySelectorAll("li a");
+            links.forEach((link) => {
+                link.textContent = link.textContent.replace(/»/g, "").trim(); // Remove "»" and trim whitespace
+            });
 
-          const links = sidebarContainer.querySelectorAll('li a');
-          links.forEach(link => {
-              link.textContent = link.textContent.replace(/»/g, '').trim(); // Remove "»" and trim whitespace
-          });
-
-          sidebarContainer.innerHTML = `
+            let svgOpenInNewTab = `<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="m 320,0 c -17.7,0 -32,14.3 -32,32 0,17.7 14.3,32 32,32 h 82.7 L 201.4,265.4 c -12.5,12.5 -12.5,32.8 0,45.3 12.5,12.5 32.8,12.5 45.3,0 L 448,109.3 V 192 c 0,17.7 14.3,32 32,32 17.7,0 32,-14.3 32,-32 V 32 C 512,14.3 497.7,0 480,0 Z M 80,32 C 35.8,32 0,67.8 0,112 v 320 c 0,44.2 35.8,80 80,80 h 320 c 44.2,0 80,-35.8 80,-80 V 320 c 0,-17.7 -14.3,-32 -32,-32 -17.7,0 -32,14.3 -32,32 v 112 c 0,8.8 -7.2,16 -16,16 H 80 c -8.8,0 -16,-7.2 -16,-16 V 112 c 0,-8.8 7.2,-16 16,-16 h 112 c 17.7,0 32,-14.3 32,-32 0,-17.7 -14.3,-32 -32,-32 z" style="fill:#ffffff;fill-opacity:1" /></svg>`;
+            sidebarContainer.innerHTML = `
                 <section id="news-section">
                     <h4>Noutăţi</h4>
                     <ul>
-                        <li><a href="http://360.uaic.ro" title="news">360uaic<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="m 320,0 c -17.7,0 -32,14.3 -32,32 0,17.7 14.3,32 32,32 h 82.7 L 201.4,265.4 c -12.5,12.5 -12.5,32.8 0,45.3 12.5,12.5 32.8,12.5 45.3,0 L 448,109.3 V 192 c 0,17.7 14.3,32 32,32 17.7,0 32,-14.3 32,-32 V 32 C 512,14.3 497.7,0 480,0 Z M 80,32 C 35.8,32 0,67.8 0,112 v 320 c 0,44.2 35.8,80 80,80 h 320 c 44.2,0 80,-35.8 80,-80 V 320 c 0,-17.7 -14.3,-32 -32,-32 -17.7,0 -32,14.3 -32,32 v 112 c 0,8.8 -7.2,16 -16,16 H 80 c -8.8,0 -16,-7.2 -16,-16 V 112 c 0,-8.8 7.2,-16 16,-16 h 112 c 17.7,0 32,-14.3 32,-32 0,-17.7 -14.3,-32 -32,-32 z" style="fill:#ffffff;fill-opacity:1" /></svg></a></li>
+                        <li><a href="http://360.uaic.ro" title="news">360uaic<span class="svg-container" /></a></li>
                     </ul>
                 </section>
 
@@ -200,60 +254,94 @@
                     <h4>Legături rapide</h4>
                     <ul>
                         <li>
-                            <a href="http://www.accuweather.com" title="Weather">AccuWeather<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" ><path d="m 320,0 c -17.7,0 -32,14.3 -32,32 0,17.7 14.3,32 32,32 h 82.7 L 201.4,265.4 c -12.5,12.5 -12.5,32.8 0,45.3 12.5,12.5 32.8,12.5 45.3,0 L 448,109.3 V 192 c 0,17.7 14.3,32 32,32 17.7,0 32,-14.3 32,-32 V 32 C 512,14.3 497.7,0 480,0 Z M 80,32 C 35.8,32 0,67.8 0,112 v 320 c 0,44.2 35.8,80 80,80 h 320 c 44.2,0 80,-35.8 80,-80 V 320 c 0,-17.7 -14.3,-32 -32,-32 -17.7,0 -32,14.3 -32,32 v 112 c 0,8.8 -7.2,16 -16,16 H 80 c -8.8,0 -16,-7.2 -16,-16 V 112 c 0,-8.8 7.2,-16 16,-16 h 112 c 17.7,0 32,-14.3 32,-32 0,-17.7 -14.3,-32 -32,-32 z" style="fill:#ffffff;fill-opacity:1" /></svg></a>
+                            <a href="http://www.accuweather.com" title="Weather">AccuWeather<span class="svg-container" /></a>
                         </li>
-                        <li><a href="http://www.laiasi.ro" title="Iasi - portal">Sutff to do in Iași<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="m 320,0 c -17.7,0 -32,14.3 -32,32 0,17.7 14.3,32 32,32 h 82.7 L 201.4,265.4 c -12.5,12.5 -12.5,32.8 0,45.3 12.5,12.5 32.8,12.5 45.3,0 L 448,109.3 V 192 c 0,17.7 14.3,32 32,32 17.7,0 32,-14.3 32,-32 V 32 C 512,14.3 497.7,0 480,0 Z M 80,32 C 35.8,32 0,67.8 0,112 v 320 c 0,44.2 35.8,80 80,80 h 320 c 44.2,0 80,-35.8 80,-80 V 320 c 0,-17.7 -14.3,-32 -32,-32 -17.7,0 -32,14.3 -32,32 v 112 c 0,8.8 -7.2,16 -16,16 H 80 c -8.8,0 -16,-7.2 -16,-16 V 112 c 0,-8.8 7.2,-16 16,-16 h 112 c 17.7,0 32,-14.3 32,-32 0,-17.7 -14.3,-32 -32,-32 z" style="fill:#ffffff;fill-opacity:1" /></svg></a></li>
-                        <li><a href="https://ro.wikipedia.org/wiki/Procesul_Bologna" title="Procesul Bologna">Șuncă Bologna<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="m 320,0 c -17.7,0 -32,14.3 -32,32 0,17.7 14.3,32 32,32 h 82.7 L 201.4,265.4 c -12.5,12.5 -12.5,32.8 0,45.3 12.5,12.5 32.8,12.5 45.3,0 L 448,109.3 V 192 c 0,17.7 14.3,32 32,32 17.7,0 32,-14.3 32,-32 V 32 C 512,14.3 497.7,0 480,0 Z M 80,32 C 35.8,32 0,67.8 0,112 v 320 c 0,44.2 35.8,80 80,80 h 320 c 44.2,0 80,-35.8 80,-80 V 320 c 0,-17.7 -14.3,-32 -32,-32 -17.7,0 -32,14.3 -32,32 v 112 c 0,8.8 -7.2,16 -16,16 H 80 c -8.8,0 -16,-7.2 -16,-16 V 112 c 0,-8.8 7.2,-16 16,-16 h 112 c 17.7,0 32,-14.3 32,-32 0,-17.7 -14.3,-32 -32,-32 z" style="fill:#ffffff;fill-opacity:1" /></svg></a></li>
-                        <li><a href="https://www.dictionary.com/" title="Dictionary">Dictionary.com<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="m 320,0 c -17.7,0 -32,14.3 -32,32 0,17.7 14.3,32 32,32 h 82.7 L 201.4,265.4 c -12.5,12.5 -12.5,32.8 0,45.3 12.5,12.5 32.8,12.5 45.3,0 L 448,109.3 V 192 c 0,17.7 14.3,32 32,32 17.7,0 32,-14.3 32,-32 V 32 C 512,14.3 497.7,0 480,0 Z M 80,32 C 35.8,32 0,67.8 0,112 v 320 c 0,44.2 35.8,80 80,80 h 320 c 44.2,0 80,-35.8 80,-80 V 320 c 0,-17.7 -14.3,-32 -32,-32 -17.7,0 -32,14.3 -32,32 v 112 c 0,8.8 -7.2,16 -16,16 H 80 c -8.8,0 -16,-7.2 -16,-16 V 112 c 0,-8.8 7.2,-16 16,-16 h 112 c 17.7,0 32,-14.3 32,-32 0,-17.7 -14.3,-32 -32,-32 z" style="fill:#ffffff;fill-opacity:1" /></svg></a></li>
-                        <li><a href="http://www.sfatulmedicului.ro/" title="Sfatul medicului">Sfatul medicului<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="m 320,0 c -17.7,0 -32,14.3 -32,32 0,17.7 14.3,32 32,32 h 82.7 L 201.4,265.4 c -12.5,12.5 -12.5,32.8 0,45.3 12.5,12.5 32.8,12.5 45.3,0 L 448,109.3 V 192 c 0,17.7 14.3,32 32,32 17.7,0 32,-14.3 32,-32 V 32 C 512,14.3 497.7,0 480,0 Z M 80,32 C 35.8,32 0,67.8 0,112 v 320 c 0,44.2 35.8,80 80,80 h 320 c 44.2,0 80,-35.8 80,-80 V 320 c 0,-17.7 -14.3,-32 -32,-32 -17.7,0 -32,14.3 -32,32 v 112 c 0,8.8 -7.2,16 -16,16 H 80 c -8.8,0 -16,-7.2 -16,-16 V 112 c 0,-8.8 7.2,-16 16,-16 h 112 c 17.7,0 32,-14.3 32,-32 0,-17.7 -14.3,-32 -32,-32 z" style="fill:#ffffff;fill-opacity:1" /></svg></a></li>
+                        <li><a href="http://www.laiasi.ro" title="Iasi - portal">Sutff to do in Iași<span class="svg-container" /></a></li>
+                        <li><a href="https://ro.wikipedia.org/wiki/Procesul_Bologna" title="Procesul Bologna">Șuncă Bologna<span class="svg-container" /></a></li>
+                        <li><a href="https://www.dictionary.com/" title="Dictionary">Dictionary.com<span class="svg-container" /></a></li>
+                        <li><a href="http://www.sfatulmedicului.ro/" title="Sfatul medicului">Sfatul medicului<span class="svg-container" /></a></li>
                     </ul>
                 </section>
             `;
+            // Insert the SVG after each <a> element
+            document
+                .querySelectorAll("li .svg-container")
+                .forEach((container) => {
+                    container.innerHTML = svgOpenInNewTab;
+                });
         }
 
         // Delete the #header element
-        const headerElement = document.querySelector('#header');
+        const headerElement = document.querySelector("#header");
         if (headerElement) {
             headerElement.remove();
         }
 
         // Remove the #rightcolumn element
-        const rightColumn = document.querySelector('#rightcolumn');
+        const rightColumn = document.querySelector("#rightcolumn");
         if (rightColumn) {
             rightColumn.remove();
         }
 
-        const bodyEL = document.querySelector('body');
+        const bodyEL = document.querySelector("body");
         if (bodyEL) {
             // Create a new div with id new-banner
-            const newBanner = document.createElement('div');
-            newBanner.id = 'new-banner';
+            const newBanner = document.createElement("div");
+            newBanner.id = "new-banner";
 
-            // Base64 SVG string (example; replace with your actual SVG)
-            const base64SVG = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDUxLjc3IiBoZWlnaHQ9IjY4LjYyIiB2aWV3Qm94PSIwIDAgMTE5LjUzIDE4LjE1IiB4bWw6c3BhY2U9InByZXNlcnZlIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0aCBpZD0iYSIgZD0iTTk3Ljk2IDIxNC4zMWgyOC4ydjE1Ljg4YzAgNy42LTYuMzUgMTMuODEtMTQuMSAxMy44MS03Ljc2IDAtMTQuMS02LjIxLTE0LjEtMTMuOHoiLz48L2RlZnM+PHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiMwMDM3NTYiIGQ9Ik0wIDBoMTE5LjUzdjE4LjE2SDB6Ii8+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTE5LjAxIC01MS4zNSkgc2NhbGUoLjI2NDU4KSI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTEyNy43OCAyMTIuNTlIOTYuMzN2MTcuNzRhMTUuMiAxNS4yIDAgMCAwIDQuNjIgMTAuODcgMTUuODQgMTUuODQgMCAwIDAgMTEuMSA0LjUzYzQuMzMgMCA4LjI3LTEuNzQgMTEuMTItNC41M2ExNS4yIDE1LjIgMCAwIDAgNC42MS0xMC44N3oiLz48Y2xpcFBhdGggaWQ9ImIiPjx1c2UgeGxpbms6aHJlZj0iI2EiIG92ZXJmbG93PSJ2aXNpYmxlIi8+PC9jbGlwUGF0aD48ZyBjbGlwLXBhdGg9InVybCgjYikiIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTA3LjY0IDIyMi40OWEuMy4zIDAgMCAxIC4wNS41OXYuM2guMmEuMy4zIDAgMSAxIC4wMi4xNGgtLjIydjEuMTFjLjE0LjU0LjQyIDEuMDMuNzMgMS40OWwtLjQ3LS4yNGMuMS4yNy4yMi41NC4zNC44MWEyLjkgMi45IDAgMCAxLS42LS42NmMuMDIuNDIgMCAuNzctLjEgMS4wNy0uMDMtLjM2LS4xLS43Mi0uMDYtMS4wOC0uMjEuMjgtLjQuNS0uNi42OS4xMy0uMjguMjUtLjU4LjMyLS45M2wtLjQyLjI2Yy4zMS0uMzguNi0uODEuNzUtMS40di0xLjExaC0uMjZhLjMuMyAwIDEgMSAuMDItLjE0aC4yNHYtLjMyYS4zLjMgMCAwIDEgLjA2LS41OHptOC44OC0uMDRhLjMuMyAwIDAgMSAuMDUuNTl2LjNoLjJhLjMuMyAwIDAgMSAuMy0uMjZjLjE2IDAgLjMuMTMuMy4zYS4zLjMgMCAwIDEtLjU3LjExaC0uMjN2MS4xYy4xMy41NC40MiAxLjAzLjcyIDEuNDlsLS40Ni0uMjRjLjEuMjcuMjEuNTQuMzQuODFhMi44NyAyLjg3IDAgMCAxLS42LS42NmMuMDIuNDIgMCAuNzctLjEgMS4wNy0uMDQtLjM2LS4xMS0uNzItLjA2LTEuMDgtLjIxLjI4LS40LjUtLjYxLjY5LjE0LS4yOC4yNi0uNTguMzMtLjkzbC0uNDMuMjZjLjMyLS4zOC42LS44Mi43NS0xLjR2LTEuMTFoLS4yNWEuMy4zIDAgMSAxIC4wMi0uMTRoLjIzdi0uMzJhLjMuMyAwIDAgMSAuMDctLjU4em0zLjEgMi41OWEuMy4zIDAgMCAxIC4wNS41OXYuM2guMmEuMy4zIDAgMSAxIC4wMi4xNGgtLjIydjEuMTJjLjEzLjU0LjQyIDEuMDMuNzIgMS40OGwtLjQ2LS4yNGMuMS4yNy4yMi41NC4zNC44MWEyLjg4IDIuODggMCAwIDEtLjYtLjY2Yy4wMi40MiAwIC43Ny0uMSAxLjA4LS4wMy0uMzYtLjEtLjczLS4wNi0xLjA5LS4yMS4yOC0uNC41LS42LjY5LjEzLS4yOC4yNS0uNTguMzItLjkybC0uNDMuMjVjLjMyLS4zOC42LS44MS43Ni0xLjR2LTEuMTFoLS4yNmEuMy4zIDAgMSAxIC4wMi0uMTRoLjI0di0uMzFhLjMuMyAwIDAgMSAuMDYtLjU5em00LjA1LTQuMTZhLjMuMyAwIDAgMSAuMDQuNTl2LjNoLjIxYS4zLjMgMCAwIDEgLjU5LjAzLjMuMyAwIDAgMS0uMy4zLjMuMyAwIDAgMS0uMjctLjE4aC0uMjN2MS4xYy4xNC41NC40MiAxLjAzLjczIDEuNDlsLS40Ni0uMjQuMzMuODFhMi44OSAyLjg5IDAgMCAxLS42LS42NmMuMDIuNDIgMCAuNzctLjA5IDEuMDctLjA0LS4zNi0uMTEtLjcyLS4wNy0xLjA4LS4yLjI4LS40LjUtLjYuNjkuMTQtLjI4LjI1LS41OC4zMy0uOTNsLS40My4yNmMuMzItLjM4LjYtLjgyLjc1LTEuNHYtMS4xMWgtLjI1YS4zLjMgMCAxIDEgLjAyLS4xNWguMjN2LS4zYS4zLjMgMCAwIDEtLjIzLS4zLjMuMyAwIDAgMSAuMy0uMjl6bS03LjU5IDguNTJhLjMuMyAwIDAgMSAuMDUuNTl2LjNoLjIxYS4zLjMgMCAxIDEgLjAyLjE0aC0uMjN2MS4xMmMuMTQuNTMuNDIgMS4wMy43MyAxLjQ4bC0uNDYtLjI0LjMzLjgxYTIuODkgMi44OSAwIDAgMS0uNi0uNjZjLjAyLjQyIDAgLjc3LS4wOSAxLjA4LS4wNC0uMzctLjExLS43My0uMDctMS4wOS0uMi4yOC0uNC41LS42LjY5LjEzLS4yOC4yNS0uNTguMzMtLjkzbC0uNDMuMjZjLjMyLS4zOC42LS44MS43NS0xLjR2LTEuMTFoLS4yNWEuMy4zIDAgMSAxIC4wMi0uMTRoLjIzdi0uMzJhLjMuMyAwIDAgMS0uMjMtLjI4YzAtLjE2LjEzLS4zLjMtLjN6bS04LjA4LjA0YS4zLjMgMCAwIDEgLjA0LjU5di4zaC4yMWEuMy4zIDAgMSAxIC4wMi4xNGgtLjIzdjEuMTJjLjE0LjUzLjQyIDEuMDIuNzMgMS40OGwtLjQ2LS4yNC4zMy44MWEyLjkyIDIuOTIgMCAwIDEtLjYtLjY2Yy4wMi40MiAwIC43Ny0uMDkgMS4wOC0uMDQtLjM3LS4xMS0uNzMtLjA3LTEuMDktLjIuMjgtLjQuNS0uNi42OS4xMy0uMjguMjUtLjU4LjMzLS45M2wtLjQzLjI2Yy4zMi0uMzguNi0uODEuNzUtMS40di0xLjExaC0uMjVhLjMuMyAwIDEgMSAuMDItLjE0aC4yM3YtLjMyYS4zLjMgMCAwIDEtLjIzLS4yOGMwLS4xNy4xMy0uMy4zLS4zem00LjA0IDMuMTRhLjMuMyAwIDAgMSAuMDUuNTl2LjNoLjJhLjMuMyAwIDEgMSAuMDMuMTVoLS4yM3YxLjFjLjEzLjU1LjQyIDEuMDQuNzIgMS40OWwtLjQ2LS4yNGMuMS4yNy4yMi41NC4zNC44MWEyLjg5IDIuODkgMCAwIDEtLjYtLjY2Yy4wMi40MiAwIC43Ny0uMSAxLjA4LS4wMy0uMzYtLjEtLjczLS4wNi0xLjA5LS4yMS4yOC0uNC41LS42MS42OS4xNC0uMjguMjYtLjU4LjMzLS45MmwtLjQzLjI1Yy4zMi0uMzguNi0uODEuNzYtMS40di0xLjExaC0uMjZhLjMuMyAwIDEgMSAuMDItLjE0aC4yM3YtLjMyYS4zLjMgMCAwIDEtLjIzLS4yOGMwLS4xNi4xNC0uMy4zLS4zem0tNy41OC03LjU4YS4zLjMgMCAwIDEgLjA1LjU5di4zaC4yYS4zLjMgMCAxIDEgLjMuMzIuMy4zIDAgMCAxLS4yNy0uMTdoLS4yM3YxLjFjLjEzLjU1LjQyIDEuMDQuNzIgMS40OWwtLjQ2LS4yNGMuMS4yNy4yMi41NC4zNC44MWEyLjg2IDIuODYgMCAwIDEtLjYtLjY2Yy4wMi40MyAwIC43Ny0uMSAxLjA4LS4wMy0uMzYtLjEtLjcyLS4wNi0xLjA5LS4yMS4yOC0uNC41LS42MS42OS4xNC0uMjguMjYtLjU4LjMzLS45MmwtLjQzLjI1Yy4zMi0uMzguNi0uODEuNzYtMS40di0xLjExaC0uMjZhLjMuMyAwIDEgMSAuMDItLjE0aC4yNHYtLjMxYS4zLjMgMCAwIDEgLjA2LS41OXptLTMuOTYtNC4xNmEuMy4zIDAgMCAxIC4wNC41OXYuM2guMmEuMy4zIDAgMCAxIC42LjAzLjMuMyAwIDAgMS0uNTcuMTJoLS4yM3YxLjFjLjE0LjU0LjQyIDEuMDMuNzMgMS40OWwtLjQ2LS4yNC4zMy44MWEyLjkgMi45IDAgMCAxLS42LS42NmMuMDIuNDIgMCAuNzctLjA5IDEuMDctLjA0LS4zNi0uMTEtLjcyLS4wNy0xLjA4LS4yLjI4LS40LjUtLjYuNjkuMTMtLjI4LjI1LS41OC4zMy0uOTNsLS40My4yNmMuMzItLjM4LjYtLjgxLjc1LTEuNHYtMS4xMWgtLjI1YS4zLjMgMCAwIDEtLjU3LS4xMS4zLjMgMCAwIDEgLjU5LS4wNGguMjN2LS4zYS4zLjMgMCAwIDEgLjA2LS41OXptMy4xLTIuMmEuMy4zIDAgMCAxIC4wNC41OXYuM2guMjFhLjMuMyAwIDEgMSAuMDIuMTRoLS4yM3YxLjExYy4xNC41NC40MiAxLjAzLjczIDEuNDlsLS40Ni0uMjQuMzMuODFhMi44OSAyLjg5IDAgMCAxLS42LS42NmMuMDIuNDIgMCAuNzctLjA5IDEuMDgtLjA0LS4zNy0uMTEtLjczLS4wNy0xLjA5LS4yLjI4LS40LjUtLjYuNjkuMTMtLjI4LjI1LS41OC4zMy0uOTNsLS40My4yNmMuMzItLjM4LjYtLjgxLjc1LTEuNHYtMS4xMWgtLjI1YS4zLjMgMCAwIDEtLjI4LjE4LjMuMyAwIDEgMSAuMy0uMzJoLjIzdi0uMzJhLjMuMyAwIDAgMS0uMjMtLjI4YzAtLjE3LjEzLS4zLjMtLjN6bTMuNTMtMi4yNGEuMy4zIDAgMCAxIC4wNS41OXYuM2guMmEuMy4zIDAgMCAxIC42LjA0LjMuMyAwIDAgMS0uNTcuMWgtLjIzdjEuMTJjLjE0LjU0LjQyIDEuMDMuNzMgMS40OGwtLjQ3LS4yNGMuMS4yNy4yMi41NC4zNC44MWEyLjkgMi45IDAgMCAxLS42LS42NmMuMDIuNDIgMCAuNzctLjEgMS4wOC0uMDMtLjM2LS4xLS43My0uMDYtMS4wOS0uMjEuMjgtLjQuNS0uNi42OS4xMy0uMjguMjUtLjU4LjMyLS45MmwtLjQzLjI1Yy4zMi0uMzguNi0uODEuNzYtMS40di0xLjExaC0uMjZhLjMuMyAwIDEgMSAuMDItLjE0aC4yNHYtLjMyYS4zLjMgMCAwIDEgLjA2LS41OHptMTMuMzUgMi4zMmEuMy4zIDAgMCAxIC4wNS41OHYuMzFoLjJhLjMuMyAwIDAgMSAuNTkuMDMuMy4zIDAgMCAxLS41Ni4xMmgtLjIzdjEuMWMuMTQuNTQuNDIgMS4wMy43MyAxLjQ5bC0uNDYtLjI0Yy4xLjI3LjIxLjU0LjMzLjhhMi44OSAyLjg5IDAgMCAxLS42LS42NWMuMDIuNDIgMCAuNzctLjA5IDEuMDctLjA0LS4zNi0uMTItLjcyLS4wNy0xLjA4LS4yLjI4LS40LjUtLjYuNjkuMTMtLjI4LjI1LS41OC4zMy0uOTNsLS40My4yNmMuMzEtLjM4LjYtLjgyLjc1LTEuNHYtMS4xMWgtLjI2YS4zLjMgMCAxIDEgLjAyLS4xNGguMjR2LS4zMmEuMy4zIDAgMCAxLS4yMy0uMjkuMy4zIDAgMCAxIC4zLS4yOXptLTMuNDUtMi40YS4zLjMgMCAwIDEgLjA0LjU5di4zaC4yMWEuMy4zIDAgMCAxIC41OS4wNC4zLjMgMCAwIDEtLjU3LjExaC0uMjN2MS4xYy4xNC41NS40MiAxLjA0LjczIDEuNWwtLjQ2LS4yNS4zMy44MWEyLjkyIDIuOTIgMCAwIDEtLjYtLjY2Yy4wMi40MyAwIC43Ny0uMDkgMS4wOC0uMDQtLjM2LS4xMS0uNzItLjA2LTEuMDktLjIyLjI4LS40LjUtLjYyLjY5LjE1LS4yOC4yNy0uNTguMzQtLjkybC0uNDMuMjVjLjMyLS4zOC42LS44MS43NS0xLjR2LTEuMTFoLS4yNWEuMy4zIDAgMSAxIC4wMi0uMTRoLjIzdi0uMzFhLjMuMyAwIDAgMS0uMjMtLjMuMy4zIDAgMCAxIC4zLS4yOXptNy4zLTEuMTNhLjMuMyAwIDAgMSAuMDUuNTh2LjNoLjJhLjMuMyAwIDEgMSAuMDMuMTVoLS4yM3YxLjFjLjE0LjU1LjQyIDEuMDQuNzMgMS41bC0uNDYtLjI1Yy4xLjI3LjIxLjU1LjMzLjgyYTIuODYgMi44NiAwIDAgMS0uNi0uNjZjLjAyLjQyIDAgLjc2LS4wOSAxLjA3LS4wNC0uMzYtLjExLS43Mi0uMDctMS4wOC0uMi4yNy0uNC41LS42LjY4LjEzLS4yOC4yNS0uNTguMzMtLjkybC0uNDMuMjVjLjMyLS4zNy42LS44MS43NS0xLjR2LTEuMTFoLS4yNWEuMy4zIDAgMCAxLS4yOC4xOC4zLjMgMCAxIDEgLjMtLjMyaC4yM3YtLjMxYS4zLjMgMCAwIDEgLjA2LS41OXptLTIuODMtMi45MWEuMy4zIDAgMCAxIC4wNS41OHYuMzFoLjIxYS4zLjMgMCAxIDEgLjAyLjE0aC0uMjN2MS4xMWMuMTQuNTQuNDIgMS4wMy43MyAxLjQ5bC0uNDYtLjI0Yy4xLjI3LjIxLjU0LjMzLjhhMi44OSAyLjg5IDAgMCAxLS42LS42NWMuMDIuNDIgMCAuNzctLjA5IDEuMDctLjA0LS4zNi0uMTEtLjcyLS4wNi0xLjA4LS4yMi4yOC0uNC41LS42Mi42OC4xNS0uMjcuMjctLjU3LjM0LS45MmwtLjQzLjI2Yy4zMi0uMzguNi0uODIuNzUtMS40di0xLjEyaC0uMjVhLjMuMyAwIDEgMSAuMDItLjE0aC4yM3YtLjNhLjMuMyAwIDAgMSAuMDYtLjZ6bS0xOC44IDBhLjMuMyAwIDAgMSAuMDQuNTh2LjMxaC4yYS4zLjMgMCAxIDEgLjAyLjE0aC0uMjJ2MS4xMWMuMTQuNTQuNDIgMS4wMy43MyAxLjQ5bC0uNDYtLjI0Yy4xLjI3LjIxLjU0LjMzLjhhMi44NyAyLjg3IDAgMCAxLS42LS42NWMuMDIuNDIgMCAuNzctLjA5IDEuMDctLjA0LS4zNi0uMTItLjcyLS4wNy0xLjA4LS4yLjI4LS40LjUtLjYuNjguMTMtLjI3LjI1LS41Ny4zMy0uOTJsLS40My4yNmMuMzEtLjM4LjYtLjgyLjc1LTEuNHYtMS4xMmgtLjI2YS4zLjMgMCAxIDEgLjAyLS4xNGguMjR2LS4zYS4zLjMgMCAwIDEgLjA2LS42em0tMi44NyAyLjc5YS4zLjMgMCAwIDEgLjA0LjU4di4zMWguMjFhLjMuMyAwIDAgMSAuNTkuMDMuMy4zIDAgMCAxLS41Ny4xMWgtLjIzdjEuMTFjLjE0LjU0LjQyIDEuMDMuNzMgMS40OGwtLjQ2LS4yM2MuMS4yNy4yMS41NC4zMy44YTIuODggMi44OCAwIDAgMS0uNi0uNjUgMyAzIDAgMCAxLS4wOSAxLjA3Yy0uMDQtLjM2LS4xMS0uNzItLjA2LTEuMDgtLjIxLjI4LS40LjUtLjYxLjY4LjE0LS4yNy4yNi0uNTcuMzMtLjkybC0uNDMuMjZjLjMyLS4zOC42LS44Mi43NS0xLjR2LTEuMTJoLS4yNWEuMy4zIDAgMSAxIC4wMi0uMTRoLjIzdi0uMzFhLjMuMyAwIDAgMSAuMDYtLjU4em0xNS45OCAyMC4xNWEuMy4zIDAgMCAxIC4wNS41OHYuM2guMmEuMy4zIDAgMSAxIC4wMi4xNGgtLjIydjEuMTJjLjE0LjU0LjQyIDEuMDMuNzMgMS40OGwtLjQ3LS4yNGMuMS4yNy4yMi41NS4zNC44MmEyLjg5IDIuODkgMCAwIDEtLjYtLjY2Yy4wMi40MiAwIC43Ni0uMSAxLjA3LS4wMy0uMzYtLjEtLjcyLS4wNi0xLjA4LS4yMS4yNy0uNC41LS42LjY4LjEzLS4yOC4yNS0uNTguMzItLjkybC0uNDMuMjVjLjMyLS4zNy42LS44Ljc2LTEuNHYtMS4xaC0uMjZhLjMuMyAwIDEgMSAuMDItLjE0aC4yNHYtLjMyYS4zLjMgMCAwIDEgLjA2LS41OXptLjA0IDYuMmEuMy4zIDAgMCAxIC4wNS41OXYuM2guMmEuMy4zIDAgMCAxIC4zLS4yNmMuMTYgMCAuMy4xMy4zLjNhLjMuMyAwIDAgMS0uNTcuMWgtLjIzdjEuMTFjLjEzLjU0LjQyIDEuMDMuNzIgMS40OWwtLjQ2LS4yNGMuMS4yNy4yMi41NC4zNC44MWEyLjg3IDIuODcgMCAwIDEtLjYtLjY2Yy4wMi40MiAwIC43Ny0uMSAxLjA3LS4wNC0uMzYtLjEtLjcyLS4wNi0xLjA4LS4yMS4yOC0uNC41LS42MS42OS4xNC0uMjguMjYtLjU4LjMzLS45M2wtLjQzLjI2Yy4zMi0uMzguNi0uODEuNzUtMS40di0xLjExaC0uMjVhLjMuMyAwIDAgMS0uNTctLjEyYzAtLjE2LjE0LS4zLjMtLjNhLjMuMyAwIDAgMSAuMy4yN2guMjJ2LS4zYS4zLjMgMCAwIDEgLjA3LS41OXptLTcuNjItNi4yNGEuMy4zIDAgMCAxIC4wNS41OHYuM2guMmEuMy4zIDAgMCAxIC42LjA0LjMuMyAwIDAgMS0uNTcuMTFoLS4yM3YxLjExYy4xMy41NC40MiAxLjAzLjczIDEuNDhsLS40Ny0uMjRjLjEuMjcuMjIuNTQuMzQuODJhMi45MiAyLjkyIDAgMCAxLS42LS42NmMuMDIuNDIgMCAuNzYtLjEgMS4wNy0uMDQtLjM2LS4xLS43Mi0uMDYtMS4wOC0uMjEuMjctLjQuNS0uNjEuNjguMTQtLjI4LjI2LS41OC4zMy0uOTJsLS40My4yNWMuMzItLjM3LjYtLjgxLjc2LTEuNHYtMS4xaC0uMjZhLjMuMyAwIDEgMSAuMDItLjE1aC4yM3YtLjMxYS4zLjMgMCAwIDEtLjIzLS4yOWMwLS4xNi4xNC0uMy4zLS4zem0wIDYuMTZhLjMuMyAwIDAgMSAuMDUuNTl2LjNoLjJhLjMuMyAwIDAgMSAuNi4wMy4zLjMgMCAwIDEtLjU3LjEyaC0uMjN2MS4xYy4xMy41NC40MiAxLjA0LjczIDEuNDlsLS40Ny0uMjRjLjEuMjcuMjIuNTQuMzQuODFhMi45IDIuOSAwIDAgMS0uNi0uNjZjLjAyLjQyIDAgLjc3LS4xIDEuMDgtLjA0LS4zNy0uMS0uNzMtLjA2LTEuMDktLjIxLjI4LS40LjUtLjYxLjY5LjE0LS4yOC4yNi0uNTguMzMtLjkzbC0uNDMuMjZjLjMyLS4zOC42LS44MS43Ni0xLjR2LTEuMTFoLS4yNmEuMy4zIDAgMSAxIC4wMi0uMTRoLjIzdi0uMzJhLjMuMyAwIDAgMS0uMjMtLjI4YzAtLjE3LjE0LS4zLjMtLjN6bTMuODEtMi42N2EuMy4zIDAgMCAxIC4wNS41OXYuM2guMmEuMy4zIDAgMSAxIC4wMy4xNWgtLjIzdjEuMWMuMTMuNTQuNDIgMS4wMy43MiAxLjQ5bC0uNDYtLjI0Yy4xLjI3LjIyLjU0LjM0LjgxYTIuODkgMi44OSAwIDAgMS0uNi0uNjZjLjAyLjQyIDAgLjc3LS4xIDEuMDgtLjAzLS4zNy0uMS0uNzMtLjA2LTEuMDktLjIxLjI4LS40LjUtLjYxLjY5LjE0LS4yOC4yNi0uNTguMzMtLjkzbC0uNDMuMjZjLjMyLS4zOC42LS44MS43Ni0xLjR2LTEuMTFoLS4yNmEuMy4zIDAgMSAxIC4wMi0uMTRoLjIzdi0uMzJhLjMuMyAwIDAgMSAuMDctLjU4eiIvPjxwYXRoIGZpbGw9IiMwMGFlZWYiIGQ9Ik0xMDEuODcgMjE0LjI5aDIwLjM4bC0xMC4xOSAxMC4xOXptLTUuMyA0LjMxIDEyLjExIDEyLjE5djE0LjdIOTcuMDN6bTMwLjg1LS4xNi0xMi4xMSAxMi4xOHYxNC43aDExLjY1eiIvPjwvZz48cGF0aCBkPSJNOTcuOTYgMjE0LjFoMjguNDJ2MTYuMDljMCAzLjg2LTEuNjEgNy4zNy00LjIxIDkuOTFhMTQuNDMgMTQuNDMgMCAwIDEtMjAuMjIgMCAxMy44NCAxMy44NCAwIDAgMS00LjItOS45di0xNi4xMXptMjcuOTguNDNIOTguMTh2MTUuNjZjMCAzLjc0IDEuNTYgNy4xNCA0LjA3IDkuNmExMy45OSAxMy45OSAwIDAgMCAxOS42MSAwIDEzLjQxIDEzLjQxIDAgMCAwIDQuMDgtOS42eiIvPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBmaWxsPSIjZmZmMjAwIiBkPSJtMTExLjM0IDIxNS45Ni45IDIgMS43OS0xLjI4LTEuMjkgMS43OCAyIC45LTIuMTgtLjIyLjIyIDIuMTktLjktMi0xLjc5IDEuMjggMS4yOS0xLjc4LTItLjkgMi4xOC4yMnptMS40NCAwLS45IDItMS43OS0xLjI4IDEuMjkgMS43OC0yIC45IDIuMTgtLjIyLS4yMiAyLjIuOS0yLjAxIDEuNzggMS4yOC0xLjI4LTEuNzggMi0uOS0yLjE4LjIyeiIvPjxwYXRoIGQ9Im0xMTEuMzggMjE1Ljk1LjY4IDEuNTIuNjgtMS41Mi4wOC4wMi0uMTcgMS42NiAxLjM1LS45OC4wNi4wNS0uOTggMS4zNiAxLjY2LS4xNy4wMi4wNy0xLjUyLjY5IDEuNTIuNjgtLjAyLjA4LTEuNjYtLjE3Ljk4IDEuMzUtLjA2LjA1LTEuMzUtLjk3LjE3IDEuNjYtLjA4LjAyLS42OC0xLjUyLS42OSAxLjUyLS4wNy0uMDIuMTctMS42Ni0xLjM1Ljk3LS4wNi0uMDUuOTgtMS4zNS0xLjY2LjE3LS4wMi0uMDggMS41Mi0uNjgtMS41Mi0uNjkuMDItLjA3IDEuNjYuMTctLjk4LTEuMzUuMDYtLjA2IDEuMzUuOTgtLjE3LTEuNjZ6bS43MiAxLjYxLjE2LjM1LjMtLjIyLjE2LTEuNXptLjEuNDItLjE0LS4zMy0uMTUuMzMtLjAyLjA0LS4wNC0uMDItLjI5LS4yMS4wNC4zNXYuMDVoLS4wNGwtLjM2LS4wNC4yLjMuMDQuMDMtLjA1LjAyLS4zMi4xNS4zMi4xNC4wNS4wMi0uMDMuMDQtLjIxLjMuMzYtLjA0aC4wNHYuMDRsLS4wNC4zNi4zLS4yMS4wMy0uMDMuMDIuMDQuMTUuMzMuMTUtLjMzLjAyLS4wNC4wMy4wMy4zLjItLjA0LS4zNXYtLjA1aC4wNGwuMzYuMDQtLjItLjI5LS4wNC0uMDQuMDUtLjAyLjMyLS4xNC0uMzItLjE1LS4wNS0uMDIuMDMtLjA0LjIxLS4yOS0uMzYuMDRoLS4wNHYtLjA1bC4wNC0uMzUtLjMuMi0uMDMuMDN6bS0uMTgtLjQyLS42Mi0xLjM3LjE1IDEuNS4zMS4yMnptMS44My0uNzEtMS4yMS44OC0uMDQuMzcuMzgtLjAzem0tLjgzIDEuMjktLjIyLjMuMzQuMTYgMS4zNy0uNjF6bTEuNSAxLjE2LTEuMzctLjYxLS4zNS4xNS4yMi4zMXptLTEuNTQtLjA3LS4zOC0uMDQuMDQuMzggMS4yMS44N3ptLS4yNiAxLjg3LS4xNS0xLjUtLjMxLS4yMS0uMTYuMzR6bS0uNy0xLjM3LS4xNi0uMzQtLjMuMjItLjE2IDEuNDl6bS0xLjc2LjcxIDEuMjItLjg3LjA0LS4zOC0uMzguMDR6bS44NC0xLjI5LjIyLS4zLS4zNS0uMTYtMS4zNi42MXptLTEuNS0xLjE2IDEuMzcuNjEuMzUtLjE1LS4yMi0uMzF6bTEuNTQuMDguMzguMDQtLjA0LS4zOC0xLjIyLS44OHoiLz48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iI2ZmZjIwMCIgZD0ibTExMC4yNSAyMTUuNTIgMS44MSAyLjM2IDEuODEtMi4zNi0xLjE1IDIuNzUgMi45Ni4zOC0yLjk2LjM4IDEuMTUgMi43NS0xLjgxLTIuMzctMS44MSAyLjM3IDEuMTUtMi43NS0yLjk2LS4zOCAyLjk2LS4zOHoiLz48cGF0aCBkPSJtMTEwLjI4IDIxNS41IDEuNzggMi4zMiAxLjc4LTIuMzMuMDYuMDQtMS4xMiAyLjcgMi45LjM4di4wN2wtMi45LjM4IDEuMTIgMi43LS4wNi4wNC0xLjc4LTIuMzMtMS43OCAyLjMzLS4wNi0uMDQgMS4xMi0yLjctMi45LS4zOHYtLjA3bDIuOS0uMzgtMS4xMi0yLjd6bTEuNzUgMi40LTEuNjMtMi4xMyAxLjAzIDIuNDguMDIuMDVoLS4wNWwtMi42Ni4zNCAyLjY2LjM1aC4wNWwtLjAyLjA1LTEuMDMgMi40OCAxLjYzLTIuMTQuMDMtLjA0LjAzLjA0IDEuNjMgMi4xNC0xLjA0LTIuNDgtLjAyLS4wNWguMDVsMi42Ny0uMzUtMi42Ny0uMzRoLS4wNWwuMDItLjA1IDEuMDQtMi40OC0xLjYzIDIuMTQtLjAzLjA0eiIvPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBmaWxsPSIjZmZmMjAwIiBkPSJtMTEyLjA2IDIxNS4yMi42OCAyLjI1IDIuMjktLjU0LTEuNjIgMS43MiAxLjYyIDEuNzEtMi4yOS0uNTQtLjY4IDIuMjYtLjY4LTIuMjYtMi4yOS41NCAxLjYyLTEuNzEtMS42Mi0xLjcyIDIuMjkuNTR6Ii8+PHBhdGggZD0ibTExMi4xIDIxNS4yLjY2IDIuMjMgMi4yNi0uNTQuMDQuMDctMS42IDEuNjkgMS42IDEuNjktLjA0LjA2LTIuMjYtLjU0LS42NiAyLjIzaC0uMDhsLS42Ni0yLjIzLTIuMjYuNTQtLjA0LS4wNiAxLjYtMS43LTEuNi0xLjY4LjA0LS4wNyAyLjI2LjU0LjY2LTIuMjN6bS42IDIuMjktLjY0LTIuMTQtLjY0IDIuMTQtLjAxLjAzaC0uMDRsLTIuMTctLjUyIDEuNTMgMS42Mi4wMy4wMy0uMDMuMDItMS41MyAxLjYzIDIuMTctLjUyaC4wNHYuMDNsLjY1IDIuMTQuNjQtMi4xNHYtLjA0bC4wNS4wMSAyLjE2LjUyLTEuNTItMS42My0uMDMtLjAyLjAzLS4wMyAxLjUyLTEuNjItMi4xNi41MS0uMDQuMDF6Ii8+PHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiNmZmYyMDAiIGQ9Im0xMTkuNyAyMzAuNjUuOSAyIDEuNzgtMS4yOS0xLjI5IDEuNzkgMiAuOS0yLjE4LS4yMi4yMiAyLjE4LS45LTItMS43OCAxLjI5IDEuMjgtMS43OS0yLS45IDIuMTguMjJ6bTEuNDMgMC0uOSAyLTEuNzgtMS4yOSAxLjI4IDEuNzktMiAuOSAyLjE4LS4yMi0uMjIgMi4xOC45LTIgMS43OSAxLjI5LTEuMjktMS43OSAyLS45LTIuMTguMjJ6Ii8+PHBhdGggZD0ibTExOS43MyAyMzAuNjMuNjggMS41Mi42OS0xLjUyLjA3LjAyLS4xNyAxLjY2IDEuMzYtLjk4LjA1LjA2LS45NyAxLjM1IDEuNjYtLjE3LjAxLjA4LTEuNTIuNjggMS41Mi42OS0uMDEuMDctMS42Ni0uMTcuOTcgMS4zNi0uMDUuMDUtMS4zNi0uOTcuMTcgMS42NS0uMDcuMDItLjY5LTEuNTItLjY4IDEuNTItLjA3LS4wMi4xNi0xLjY1LTEuMzUuOTctLjA1LS4wNS45Ny0xLjM2LTEuNjYuMTctLjAyLS4wNyAxLjUyLS42OS0xLjUyLS42OC4wMi0uMDggMS42Ni4xNy0uOTctMS4zNS4wNS0uMDUgMS4zNS45Ny0uMTYtMS42NnptLjczIDEuNjEuMTUuMzUuMzEtLjIyLjE1LTEuNXptLjEuNDMtLjE1LS4zMy0uMTQuMzMtLjAyLjA0LS4wNC0uMDMtLjMtLjIuMDQuMzV2LjA0aC0uMDRsLS4zNi0uMDQuMjEuMy4wMy4wMy0uMDQuMDItLjMzLjE1LjMzLjE1LjA0LjAyLS4wMy4wNC0uMi4yOS4zNS0uMDRoLjA1di4wNGwtLjA0LjM2LjI5LS4yLjA0LS4wNC4wMi4wNS4xNC4zMi4xNS0uMzIuMDItLjA1LjA0LjAzLjMuMjEtLjA0LS4zNnYtLjA0aC4wNGwuMzYuMDQtLjIxLS4zLS4wMy0uMDMuMDQtLjAyLjMzLS4xNS0uMzMtLjE1LS4wNC0uMDIuMDMtLjAzLjItLjMtLjM1LjA0aC0uMDV2LS4wNGwuMDQtLjM2LS4yOS4yMS0uMDQuMDN6bS0uMTktLjQzLS42MS0xLjM2LjE1IDEuNDkuMy4yMnptMS44NC0uNy0xLjIyLjg3LS4wMy4zOC4zNy0uMDR6bS0uODMgMS4yOC0uMjMuMzEuMzUuMTYgMS4zNy0uNjJ6bTEuNDkgMS4xNy0xLjM3LS42Mi0uMzUuMTYuMjIuM3ptLTEuNTQtLjA4LS4zNy0uMDQuMDMuMzggMS4yMi44OHptLS4yNiAxLjg3LS4xNS0xLjQ5LS4zLS4yMi0uMTYuMzV6bS0uNy0xLjM2LS4xNS0uMzUtLjMxLjIyLS4xNSAxLjV6bS0xLjc1LjcgMS4yMS0uODcuMDQtLjM4LS4zOC4wNHptLjgzLTEuMjguMjItLjMxLS4zNC0uMTYtMS4zNy42MnptLTEuNDktMS4xNyAxLjM3LjYyLjM0LS4xNi0uMjItLjN6bTEuNTMuMDguMzguMDQtLjA0LS4zOC0xLjIxLS44N3oiLz48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iI2ZmZjIwMCIgZD0ibTExOC42MSAyMzAuMiAxLjggMi4zNyAxLjgxLTIuMzctMS4xNCAyLjc1IDIuOTUuMzgtMi45NS4zOCAxLjE0IDIuNzUtMS44MS0yLjM3LTEuOCAyLjM3IDEuMTQtMi43NS0yLjk1LS4zOCAyLjk1LS4zOHoiLz48cGF0aCBkPSJtMTE4LjY0IDIzMC4xOCAxLjc3IDIuMzIgMS43OC0yLjMyLjA3LjAzLTEuMTMgMi43IDIuOS4zOHYuMDhsLTIuOS4zNyAxLjEzIDIuNy0uMDcuMDUtMS43OC0yLjMzLTEuNzcgMi4zMy0uMDctLjA0IDEuMTMtMi43LTIuOS0uMzh2LS4wOGwyLjktLjM3LTEuMTMtMi43em0xLjc0IDIuNDEtMS42Mi0yLjEzIDEuMDMgMi40Ny4wMi4wNWgtLjA1bC0yLjY2LjM1IDIuNjYuMzQuMDUuMDEtLjAyLjA1LTEuMDMgMi40NyAxLjYyLTIuMTMuMDMtLjA0LjAzLjA0IDEuNjMgMi4xMy0xLjAzLTIuNDctLjAyLS4wNWguMDVsMi42Ni0uMzUtMi42Ni0uMzRoLS4wNWwuMDItLjA2IDEuMDMtMi40Ny0xLjYzIDIuMTMtLjAzLjA0eiIvPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBmaWxsPSIjZmZmMjAwIiBkPSJtMTIwLjQxIDIyOS45LjY4IDIuMjYgMi4zLS41NC0xLjYyIDEuNzEgMS42MiAxLjcyLTIuMy0uNTUtLjY4IDIuMjYtLjY3LTIuMjYtMi4zLjU1IDEuNjItMS43Mi0xLjYyLTEuNzEgMi4zLjU0eiIvPjxwYXRoIGQ9Im0xMjAuNDUgMjI5Ljg5LjY3IDIuMjIgMi4yNi0uNTMuMDMuMDYtMS41OSAxLjY5IDEuNiAxLjY5LS4wNC4wNi0yLjI2LS41My0uNjcgMi4yMmgtLjA3bC0uNjctMi4yMi0yLjI2LjUzLS4wNC0uMDYgMS42LTEuNjktMS42LTEuNjkuMDQtLjA2IDIuMjYuNTMuNjctMi4yMnptLjYgMi4yOC0uNjQtMi4xNC0uNjQgMi4xNHYuMDNoLS4wNGwtMi4xNy0uNTIgMS41MyAxLjYyLjAyLjAzLS4wMi4wMy0xLjUzIDEuNjIgMi4xNy0uNTJoLjAzbC4wMS4wMy42NCAyLjE0LjY0LTIuMTQuMDEtLjAzaC4wNGwyLjE3LjUyLTEuNTMtMS42Mi0uMDMtLjAzLjAzLS4wMyAxLjUzLTEuNjItMi4xNy41MS0uMDQuMDF6Ii8+PHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiNmZmYyMDAiIGQ9Im0xMDIuODYgMjMwLjY1LjkgMiAxLjc4LTEuMjktMS4yOCAxLjc5IDIgLjktMi4xOC0uMjIuMjIgMi4xOC0uOS0yLTEuNzkgMS4yOSAxLjI5LTEuNzktMi0uOSAyLjE4LjIyem0xLjQ0IDAtLjkgMi0xLjc5LTEuMjkgMS4yOSAxLjc5LTIgLjkgMi4xOC0uMjItLjIyIDIuMTguOS0yIDEuNzggMS4yOS0xLjI4LTEuNzkgMi0uOS0yLjE4LjIyeiIvPjxwYXRoIGQ9Im0xMDIuOSAyMzAuNjMuNjggMS41Mi42OC0xLjUyLjA3LjAyLS4xNiAxLjY2IDEuMzUtLjk4LjA1LjA2LS45NyAxLjM1IDEuNjYtLjE3LjAyLjA4LTEuNTIuNjggMS41Mi42OS0uMDIuMDctMS42Ni0uMTcuOTcgMS4zNi0uMDUuMDUtMS4zNS0uOTcuMTYgMS42NS0uMDcuMDItLjY4LTEuNTItLjY5IDEuNTItLjA3LS4wMi4xNy0xLjY1LTEuMzUuOTctLjA2LS4wNS45OC0xLjM2LTEuNjYuMTctLjAyLS4wNyAxLjUyLS42OS0xLjUyLS42OC4wMi0uMDggMS42Ni4xNy0uOTgtMS4zNS4wNi0uMDUgMS4zNS45Ny0uMTctMS42NnptLjcyIDEuNjEuMTYuMzUuMy0uMjIuMTYtMS41em0uMS40My0uMTQtLjMzLS4xNS4zMy0uMDIuMDQtLjA0LS4wMy0uMjktLjIuMDQuMzV2LjA0aC0uMDVsLS4zNS0uMDQuMi4zLjAzLjAzLS4wNC4wMi0uMzMuMTUuMzMuMTUuMDQuMDItLjAyLjA0LS4yMS4yOS4zNS0uMDRoLjA1di4wNGwtLjA0LjM2LjMtLjIuMDMtLjA0LjAyLjA1LjE1LjMyLjE1LS4zMi4wMi0uMDUuMDMuMDMuMy4yMS0uMDQtLjM2di0uMDRoLjA0bC4zNi4wNC0uMjEtLjMtLjAzLS4wMy4wNC0uMDIuMzMtLjE1LS4zMy0uMTUtLjA0LS4wMi4wMy0uMDMuMi0uMy0uMzUuMDRoLS4wNXYtLjA0bC4wNS0uMzYtLjMuMjEtLjAzLjAzem0tLjE4LS40My0uNjItMS4zNi4xNSAxLjQ5LjMxLjIyem0xLjgzLS43LTEuMjEuODctLjA0LjM4LjM4LS4wNHptLS44MyAxLjI4LS4yMi4zMS4zNS4xNiAxLjM2LS42MnptMS41IDEuMTctMS4zOC0uNjItLjM0LjE2LjIyLjN6bS0xLjU0LS4wOC0uMzgtLjA0LjA0LjM4IDEuMjIuODh6bS0uMjYgMS44Ny0uMTUtMS40OS0uMzEtLjIyLS4xNi4zNXptLS43LTEuMzYtLjE2LS4zNS0uMy4yMi0uMTYgMS41em0tMS43Ni43IDEuMjItLjg3LjA0LS4zOC0uMzguMDR6bS44NC0xLjI4LjIyLS4zMS0uMzUtLjE2LTEuMzcuNjJ6bS0xLjUtMS4xNyAxLjM3LjYyLjM1LS4xNi0uMjItLjN6bTEuNTQuMDguMzguMDQtLjA0LS4zOC0xLjIyLS44N3oiLz48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iI2ZmZjIwMCIgZD0ibTEwMS43NyAyMzAuMiAxLjgxIDIuMzcgMS44MS0yLjM3LTEuMTUgMi43NSAyLjk1LjM4LTIuOTUuMzggMS4xNSAyLjc1LTEuODEtMi4zNy0xLjgxIDIuMzcgMS4xNS0yLjc1LTIuOTYtLjM4IDIuOTYtLjM4eiIvPjxwYXRoIGQ9Im0xMDEuOCAyMzAuMTggMS43OCAyLjMyIDEuNzgtMi4zMi4wNi4wMy0xLjEzIDIuNyAyLjkuMzh2LjA4bC0yLjkuMzcgMS4xMyAyLjctLjA2LjA1LTEuNzgtMi4zMy0xLjc4IDIuMzMtLjA3LS4wNCAxLjEzLTIuNy0yLjktLjM4di0uMDhsMi45LS4zNy0xLjEyLTIuN3ptMS43NSAyLjQxLTEuNjMtMi4xMyAxLjAzIDIuNDcuMDIuMDVoLS4wNWwtMi42Ni4zNSAyLjY2LjM0LjA1LjAxLS4wMi4wNS0xLjAzIDIuNDcgMS42My0yLjEzLjAzLS4wNC4wMy4wNCAxLjYzIDIuMTMtMS4wNC0yLjQ3LS4wMi0uMDVoLjA1bDIuNjYtLjM1LTIuNjYtLjM0aC0uMDVsLjAyLS4wNiAxLjA0LTIuNDctMS42MyAyLjEzLS4wMy4wNHoiLz48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iI2ZmZjIwMCIgZD0ibTEwMy41OCAyMjkuOS42NyAyLjI2IDIuMy0uNTQtMS42MiAxLjcxIDEuNjIgMS43Mi0yLjMtLjU1LS42NyAyLjI2LS42OC0yLjI2LTIuMjkuNTUgMS42MS0xLjcyLTEuNjEtMS43MSAyLjI5LjU0eiIvPjxwYXRoIGQ9Im0xMDMuNjEgMjI5Ljg5LjY3IDIuMjIgMi4yNi0uNTMuMDQuMDYtMS42IDEuNjkgMS42IDEuNjktLjA0LjA2LTIuMjYtLjUzLS42NyAyLjIyaC0uMDdsLS42Ny0yLjIyLTIuMjUuNTMtLjA0LS4wNiAxLjU5LTEuNjktMS42LTEuNjkuMDUtLjA2IDIuMjUuNTMuNjctMi4yMnptLjYgMi4yOC0uNjMtMi4xNC0uNjQgMi4xNC0uMDEuMDNoLS4wNGwtMi4xNy0uNTIgMS41MyAxLjYyLjAzLjAzLS4wMy4wMy0xLjUzIDEuNjIgMi4xNy0uNTJoLjA0di4wM2wuNjUgMi4xNC42NC0yLjE0di0uMDNoLjA0bDIuMTcuNTItMS41My0xLjYyLS4wMi0uMDMuMDItLjAzIDEuNTMtMS42Mi0yLjE3LjUxLS4wMy4wMXoiLz48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iI2I1NGU5MiIgZD0ibTExNS40NCAyMjUuNC4wMy0uMjEtLjY5LS44NmgtNS45NnY2Ljk4aDYuNjJ6Ii8+PHBhdGggZD0ibTExNS41IDIyNS40LjAzLS4ydi0uMDNsLS4wMS0uMDItLjctLjg2LS4wMS0uMDJoLTYuMDV2Ny4xMWg2Ljc0di01Ljk4em0tLjEtLjItLjAzLjJ2NS44NGgtNi40OHYtNi44NGg1Ljg2eiIvPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBmaWxsPSIjZmZmMjAwIiBkPSJNMTEwIDIyNS44N2MtLjEtLjU0LS4zOC0uODYtLjgyLTEuMjN2Ni43Yy40Ny4wOC43Mi40OC44NSAxLjA4eiIvPjxwYXRoIGQ9Ik0xMTAuMDUgMjI1Ljg2Yy0uMDUtLjI4LS4xNS0uNS0uMy0uN2EyLjYgMi42IDAgMCAwLS41NC0uNTdsLS4wOS0uMDd2Ni44N2guMDVhLjguOCAwIDAgMSAuNTIuMzNjLjEzLjE3LjIyLjQyLjI4LjdoLjFsLS4wMi02LjU1em0tLjM4LS42NGMuMTMuMTkuMjIuNC4yNy42NmwuMDMgNi4xNGExLjUyIDEuNTIgMCAwIDAtLjItLjM3Ljg3Ljg3IDAgMCAwLS41NC0uMzV2LTYuNTVjLjE4LjE2LjMzLjMuNDQuNDd6Ii8+PHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiNiNTRlOTIiIGQ9Ik0xMTAuMiAyMzAuNzVoNC40djEuMzloLTQuNHoiLz48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iI2ZmZjIwMCIgZD0iTTExNS4xIDIyNS45N2gtNS4wNGEyLjIyIDIuMjIgMCAwIDAtLjg3LTEuMzdsNS4wOC0uMDNjLjg0LjI1IDEuMTIuNzIuODMgMS40eiIvPjxwYXRoIGQ9Ik0xMTUuMDcgMjI1LjkxaC00Ljk3YTMuMSAzLjEgMCAwIDAtLjMzLS43OCAxLjk2IDEuOTYgMCAwIDAtLjQyLS40N2w0LjkxLS4wNC4yNi4xYy4yNy4xLjQ2LjI1LjU1LjQzLjEuMTguMTEuMzkuMDQuNjNhMS43IDEuNyAwIDAgMS0uMDQuMTN6bS01LjAxLjExaDUuMDhsLjAxLS4wMy4wNy0uMTdhLjkuOSAwIDAgMC0uMDUtLjcyIDEuMiAxLjIgMCAwIDAtLjYxLS40OSAzLjA1IDMuMDUgMCAwIDAtLjI3LS4xaC0uMDJsLTUuMDguMDQtLjAzLjFjLjIuMTMuMzguMzEuNTIuNTMuMTQuMjMuMjUuNS4zMi44bC4wMS4wNGguMDV6Ii8+PHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiNiNTRlOTIiIGQ9Ik0xMTUuNDUgMjI1Ljc1aC0xLjU4YS4xMS4xMSAwIDAgMC0uMTEuMTJ2LjZjMCAuMDcuMDUuMTIuMTEuMTJoMS41OGMuMDYgMCAuMS0uMDUuMS0uMTF2LS42MWEuMTEuMTEgMCAwIDAtLjEtLjEyem0wIDIuMDNoLTEuNThhLjExLjExIDAgMCAwLS4xMS4xMXYuNjFjMCAuMDcuMDUuMTEuMTEuMTFoMS41OGEuMS4xIDAgMCAwIC4xLS4xdi0uNjJhLjExLjExIDAgMCAwLS4xLS4xem0wIDEuOTVoLTEuNThhLjExLjExIDAgMCAwLS4xMS4xMXYuNjFjMCAuMDYuMDUuMTEuMTEuMTFoMS41OGEuMS4xIDAgMCAwIC4xLS4xdi0uNjJhLjExLjExIDAgMCAwLS4xLS4xMXptMCAxLjg4aC0xLjU4YS4xMS4xMSAwIDAgMC0uMTEuMTF2LjYyYzAgLjA2LjA1LjEuMTEuMWgxLjU4Yy4wNiAwIC4xLS4wNC4xLS4xdi0uNjJhLjExLjExIDAgMCAwLS4xLS4xem0tLjAzLTEuMDZ2MS4wNmgtMS41M3YtMS4wNnptMC0xLjg5aC0xLjUzdjEuMDdoMS41M3ptMC0yLjA1aC0xLjUzdjEuMTdoMS41M3ptLTEuNjMtLjY3djYuNDFoLTMuNzV2LTYuNDF6bS0zLjA0IDUuMzhhLjM0LjM0IDAgMCAwLS4zNC4zNS4zNS4zNSAwIDEgMCAuMzQtLjM1em0yLjUgMGEuMzUuMzUgMCAwIDAgMCAuNy4zNS4zNSAwIDAgMCAwLS43em0wLTQuNDV2NC40NHptMC0uN2EuMzUuMzUgMCAwIDAgMCAuNy4zNS4zNSAwIDAgMCAwLS43em0tMi41IDBhLjM1LjM1IDAgMCAwLS4zNC4zNS4zNS4zNSAwIDEgMCAuMzQtLjM1em0uMDEuN3Y0LjQ0em0yLjMtLjAzLTIuMTQgNC41MXptLTIuMTUtLjAzIDIuMTggNC41NHoiLz48cGF0aCBkPSJNMTE1LjU2IDIyNi42YS4xNi4xNiAwIDAgMCAuMDUtLjEydi0uNjFhLjE3LjE3IDAgMCAwLS4xNy0uMTdoLTEuNTdhLjE3LjE3IDAgMCAwLS4xNy4xN3YuMDFoLTMuNzJ2Ni41M2gzLjc0bC4wMy4wNGMuMDMuMDMuMDcuMDUuMTIuMDVoMS41OGMuMDQgMCAuMDgtLjAyLjExLS4wNWEuMTcuMTcgMCAwIDAgLjA1LS4xMXYtLjYyYS4xNy4xNyAwIDAgMC0uMTQtLjE2di0uOTVjLjA0IDAgLjA3LS4wMi4xLS4wNGEuMTcuMTcgMCAwIDAgLjA0LS4xMnYtLjYxYS4xNy4xNyAwIDAgMC0uMTQtLjE2di0xLjAxYy4wNCAwIC4wNy0uMDMuMS0uMDVhLjE3LjE3IDAgMCAwIC4wNC0uMTJ2LS42YS4xNy4xNyAwIDAgMC0uMTQtLjE2di0xLjFjLjA0IDAgLjA3LS4wMi4xLS4wNHptLTEuODYgNS4xM3YuNTdoLTMuNnYtNi4zMWgzLjZ2LjQ5YS4xNy4xNyAwIDAgMCAuMTQuMTZ2MS4wOWEuMTYuMTYgMCAwIDAtLjA5LjA0LjE2LjE2IDAgMCAwLS4wNS4xMnYuNjFjMCAuMDUuMDIuMS4wNS4xMmwuMDkuMDV2MWEuMTcuMTcgMCAwIDAtLjE0LjE2di42MmEuMTcuMTcgMCAwIDAgLjE0LjE2di45NWEuMTYuMTYgMCAwIDAtLjA5LjA1LjE2LjE2IDAgMCAwLS4wNS4xMXptMS43OS0uMDQuMDEuMDR2LjZsLS4wMS4wNWEuMDYuMDYgMCAwIDEtLjA0LjAxaC0xLjU4bC0uMDQtLjAxYS4wNi4wNiAwIDAgMS0uMDItLjA0di0uNjJhLjA2LjA2IDAgMCAxIC4wNi0uMDVoMS41OGMuMDEgMCAuMDMgMCAuMDQuMDJ6bS0xLjU0LS4xM3YtLjk0aDEuNDJ2Ljk0em0xLjU0LTEuNzYuMDEuMDR2LjYxYS4wNi4wNiAwIDAgMS0uMDIuMDVoLTEuNjVhLjA2LjA2IDAgMCAxLS4wMi0uMDV2LS42MWMwLS4wMiAwLS4wMy4wMi0uMDRhLjA2LjA2IDAgMCAxIC4wNC0uMDJoMS41OGMuMDEgMCAuMDMgMCAuMDQuMDJ6bS0xLjU0LS4xM3YtLjk1aDEuNDJ2Ljk1em0xLjU0LTEuODIuMDEuMDR2LjYxbC0uMDEuMDRhLjA2LjA2IDAgMCAxLS4wNC4wMmgtMS41OGMtLjAyIDAtLjAzIDAtLjA0LS4wMmEuMDYuMDYgMCAwIDEtLjAyLS4wNHYtLjZhLjA2LjA2IDAgMCAxIC4wNi0uMDZoMS41OGwuMDQuMDF6bS0xLjU0LS4xMnYtMS4wN2gxLjQydjEuMDZ6bTEuNS0xLjJoLTEuNThsLS4wNC0uMDFhLjA2LjA2IDAgMCAxLS4wMi0uMDR2LS42MWwuMDItLjA0YS4wNS4wNSAwIDAgMSAuMDQtLjAyaDEuNThjLjAxIDAgLjAzIDAgLjA0LjAybC4wMS4wNHYuNmwtLjAxLjA1YS4wNi4wNiAwIDAgMS0uMDQuMDF6bS01LjU5LS45MmguMDh2Ni4zOGgtLjA4em0tLjEzLS4yM2guMDh2Ni4zMmgtLjA4em0tLjA3LS4yMy0uMDMgNi40OGgtLjA4bC4wMy02LjQ4em0tLjE5LS4xNmguMDh2Ni40MWgtLjA4em0tLjE0LS4xOWguMDh2Ni42NGgtLjA4eiIvPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBmaWxsPSIjZmZmMjAwIiBkPSJNMTEwLjA0IDIyNi43OWguM3YuNzloLS4zeiIvPjxwYXRoIGQ9Ik0xMTAuMzQgMjI2Ljc0aC0uMzZ2LjloLjQxdi0uOXptLS4yNS4xaC4ydi42OWgtLjJ6Ii8+PHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiNmZmYyMDAiIGQ9Ik0xMTAuMDQgMjMwLjUzaC4zdi43OWgtLjN6Ii8+PHBhdGggZD0iTTExMC4zNCAyMzAuNDhoLS4zNnYuOWguNDF2LS45MXptLS4yNS4xaC4ydi42OGgtLjJ6Ii8+PHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9IiNmZmYyMDAiIGQ9Im0xMTAuMDcgMjI2Ljc5LTEuNDMtMS4zOHYuNzlsMS40MyAxLjM5eiIvPjxwYXRoIGQ9Im0xMTAuMSAyMjYuNzUtMS40Mi0xLjM4LS4xLS4xdi45N2wuMDIuMDEgMS40MyAxLjM5LjEuMDl2LS45NnptLTEuNC0xLjIyIDEuMzEgMS4yOHYuNjVsLTEuMzItMS4yOHoiLz48ZWxsaXBzZSBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iI2ZmZjIwMCIgY3g9IjEwOS4zIiBjeT0iMjI2LjQ2IiByeD0iLjEiIHJ5PSIuMTYiLz48cGF0aCBkPSJNMTA5LjMgMjI2LjI0Yy0uMDUgMC0uMS4wMy0uMTIuMDdhLjI3LjI3IDAgMCAwLS4wNC4xNWMwIC4wNS4wMS4xLjA0LjE0LjAyLjA0LjA3LjA3LjExLjA3LjA1IDAgLjEtLjAzLjEyLS4wN2EuMjcuMjcgMCAwIDAgLjA0LS4xNC4yNC4yNCAwIDAgMC0uMDQtLjE1Yy0uMDMtLjA0LS4wNy0uMDctLjExLS4wN3ptLS4wMy4xMy4wMy0uMDIuMDIuMDIuMDIuMDljMCAuMDMgMCAuMDYtLjAyLjA4bC0uMDIuMDJjLS4wMSAwLS4wMiAwLS4wMy0uMDJhLjE2LjE2IDAgMCAxLS4wMi0uMDhjMC0uMDQgMC0uMDcuMDItLjA5eiIvPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBmaWxsPSIjZmZmMjAwIiBkPSJtMTEwLjAzIDIzMC40OS0xLjQzLTEuMzl2LjhsMS40MyAxLjM4eiIvPjxwYXRoIGQ9Im0xMTAuMDcgMjMwLjQ1LTEuNDQtMS4zOS0uMDktLjA5di45NWwuMDIuMDIgMS40MyAxLjM4LjEuMXYtLjk3em0tMS40Mi0xLjIyIDEuMzIgMS4yOHYuNjVsLTEuMzItMS4yOHoiLz48ZWxsaXBzZSBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iI2ZmZjIwMCIgY3g9IjEwOS4yNSIgY3k9IjIzMC4xNSIgcng9Ii4xIiByeT0iLjE2Ii8+PHBhdGggZD0iTTEwOS4yNSAyMjkuOTNhLjEzLjEzIDAgMCAwLS4xMS4wOC4yNy4yNyAwIDAgMC0uMDQuMTRjMCAuMDUuMDEuMS4wNC4xNC4wMi4wNS4wNy4wNy4xMS4wNy4wNSAwIC4xLS4wMy4xMi0uMDdhLjI3LjI3IDAgMCAwIC4wNC0uMTRjMC0uMDYtLjAxLS4xLS4wNC0uMTUtLjAzLS4wNC0uMDctLjA3LS4xMi0uMDd6bS0uMDIuMTMuMDItLjAyLjAzLjAyLjAyLjA5YzAgLjAzIDAgLjA2LS4wMi4wOCAwIC4wMi0uMDIuMDItLjAzLjAybC0uMDItLjAyYS4xNi4xNiAwIDAgMS0uMDItLjA4YzAtLjA0IDAtLjA3LjAyLS4wOXptLjE4LTUuMzNoNS4yMXYuMDhoLTUuMjF6bS4yMi4xNmg1LjMxdi4wOGgtNS4zMXptLjEzLjIzaDUuMzR2LjA4aC01LjM0em0uMDQuMjJoNS4zN3YuMDhoLTUuMzd6bS4wOS4yaDUuMjd2LjA4aC01LjI3em0zLjY1IDUuODVhLjQuNCAwIDAgMC0uMjItLjExdi00LjM2YS40LjQgMCAwIDAgLjIyLS42OC40LjQgMCAwIDAtLjU3IDAgLjQuNCAwIDAgMCAuMDQuNmwtMSAyLjEyLTEuMDEtMi4xYS40LjQgMCAwIDAgLjA2LS42MS40LjQgMCAxIDAtLjM0LjY4djQuMzVhLjQuNCAwIDAgMC0uMzYuNC40LjQgMCAxIDAgLjY0LS4zM2wxLjAxLTIuMTMgMS4wMiAyLjEyYS40LjQgMCAwIDAtLjA2LjYyLjQuNCAwIDAgMCAuNTcgMCAuNC40IDAgMCAwIDAtLjU3em0tMy00LjY3YS4zLjMgMCAwIDEgMC0uNDEuMy4zIDAgMCAxIC40MiAwIC4zLjMgMCAwIDEgMCAuNDEuMy4zIDAgMCAxLS40MSAwem0uNSA0Ljk1YS4zLjMgMCAwIDEtLjMuMy4zLjMgMCAwIDEtLjI4LS4zLjMuMyAwIDAgMSAuMy0uMy4zLjMgMCAwIDEgLjMuM3ptLS4xNC0uMzdhLjM3LjM3IDAgMCAwLS4wNy0uMDJ2LTQuMzZjLjAyIDAgLjA1IDAgLjA3LS4wMmwxLjA1IDIuMTl6bTIuMDUtNC43OGEuMy4zIDAgMCAxIC4zLS4zLjMuMyAwIDAgMSAuMjguMy4zLjMgMCAwIDEtLjI5LjI5LjMuMyAwIDAgMS0uMy0uM3ptLS44OCAyLjU3IDEuMDQtMi4yYy4wMy4wMi4wNi4wMy4xLjAzdjQuMzVhLjQuNCAwIDAgMC0uMDguMDJ6bTEuMzggMi43OGEuMy4zIDAgMCAxLS40MSAwIC4zLjMgMCAwIDEgMC0uNDEuMy4zIDAgMCAxIC40IDAgLjMuMyAwIDAgMSAwIC40MXoiLz48L2c+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTIwLjE0IDUuMThoLjVWNy4xYzAgLjE2LjA1LjI4LjE0LjM4LjEuMS4yMi4xNC4zOS4xNGEuNi42IDAgMCAwIC40Mi0uMTQuNS41IDAgMCAwIC4xNi0uMzlWNS4xOGguNXYxLjk1YzAgLjMtLjEuNTItLjMuNjktLjE5LjE2LS40NS4yNS0uNzguMjVhMS4xIDEuMSAwIDAgMS0uNzYtLjI1Yy0uMTgtLjE2LS4yNy0uMzktLjI3LS42OVY1LjE4em00LjU1IDIuODgtMS4zOC0xLjh2MS43NmgtLjQ4VjUuMThoLjI0bDEuMzQgMS43MVY1LjE4aC40OXYyLjg4em0uOC0uMDRWNS4xOGguNXYyLjg0em0yLjE1LjA0aC0uMjhMMjYuMyA1LjE4aC41NmwuNjUgMS45Mi43LTEuOTJoLjU0em0xLjkxLTIuNDN2LjY2aC45NHYuNDNoLS45NHYuODVoMS4yOXYuNDVoLTEuOFY1LjE4aDEuODJ2LjQ1aC0xLjN6bTMuMzYgMi4zOS0uNzYtMS4xNy0uMzItLjAydjEuMTloLS41MlY1LjE4YTExLjMyIDExLjMyIDAgMCAwIC43OC0uMDNjLjcyIDAgMS4wOC4yOCAxLjA4Ljg0IDAgLjE3LS4wNS4zMi0uMTUuNDZhLjguOCAwIDAgMS0uMzcuMjlsLjg0IDEuMjhoLS41OHptLTEuMDgtMi40di43OWguMjFjLjIxIDAgLjM3LS4wMi40Ny0uMDguMS0uMDYuMTQtLjE4LjE0LS4zNSAwLS4xNC0uMDUtLjI0LS4xNi0uMjlhMS4xIDEuMSAwIDAgMC0uNDktLjA4aC0uMTd6bTEuNzYgMi4yNC4yLS40NWMuMTkuMTQuMzkuMi41OC4yLjMgMCAuNDQtLjEuNDQtLjMgMC0uMS0uMDMtLjE5LS4xLS4yOGExLjM0IDEuMzQgMCAwIDAtLjQzLS4zYy0uMjItLjEtLjM3LS4yLS40NC0uMjZhLjczLjczIDAgMCAxLS4xOC0uMjUuODMuODMgMCAwIDEtLjA2LS4zM2MwLS4yMS4wOC0uNC4yNC0uNTRhLjg5Ljg5IDAgMCAxIC42Mi0uMjJjLjMzIDAgLjU3LjA2LjcyLjE5bC0uMTUuNDNhLjk1Ljk1IDAgMCAwLS41Ni0uMmMtLjEyIDAtLjIuMDQtLjI3LjFhLjMyLjMyIDAgMCAwLS4xLjI0YzAgLjE2LjE5LjMzLjU1LjUuMTkuMS4zMi4xOS40LjI3LjEuMDcuMTUuMTYuMi4yNy4wNC4xLjA2LjIyLjA2LjM1YS43LjcgMCAwIDEtLjI3LjU2IDEuMSAxLjEgMCAwIDEtLjczLjIzYy0uMjYgMC0uNS0uMDctLjcyLS4yem0yLjE4LjE2VjUuMThoLjV2Mi44NHptMi4yNS0yLjR2Mi40aC0uNXYtMi40aC0uOXYtLjQ0aDIuMzR2LjQ1em0yLjU1IDIuNGguNTZsLTEuMTQtMi44OGgtLjIybC0xLjE0IDIuODhoLjU2bC4yLS41OGguOTd6TTM5Ljg3IDZsLjM1IDEuMDVoLS42OHptMi4zNC0uMzh2Mi4zOWgtLjV2LTIuNGgtLjl2LS40NGgyLjM0di40NXptMS43NyAwdi42NmguOTR2LjQzaC0uOTR2Ljg1aDEuMjl2LjQ1aC0xLjc5VjUuMThoMS44MXYuNDVINDR6bTMuNDEgMi4zOS0uMi0uNThoLS45OGwtLjIuNThoLS41NWwxLjEzLTIuODhoLjIybDEuMTQgMi44OHpNNDYuNyA2bC0uMzMgMS4wNWguNjh6bTMuODUgMi43Mi0uMTYtLjIyYTEgMSAwIDAgMCAuMjItLjIuMjYuMjYgMCAwIDAgLjA0LS4xNGMwLS4wNS0uMDMtLjEtLjEtLjE3YS4yOS4yOSAwIDAgMS0uMDktLjJjMC0uMjEuMS0uMzIuMzEtLjMyLjEgMCAuMTkuMDMuMjUuMWEuNC40IDAgMCAxIC4wOC4yN2MwIC4zNi0uMTguNjUtLjU1Ljg4em0uOSAwLS4xNy0uMjJhMSAxIDAgMCAwIC4yMi0uMi4yNi4yNiAwIDAgMCAuMDUtLjE0YzAtLjA1LS4wNC0uMS0uMS0uMTdhLjI5LjI5IDAgMCAxLS4xLS4yYzAtLjIxLjEtLjMyLjMyLS4zMi4xIDAgLjE4LjAzLjI0LjFhLjQuNCAwIDAgMSAuMDkuMjdjMCAuMzYtLjE5LjY1LS41Ni44OHptMi43Mi0uNzEtLjItLjU4aC0uOThsLS4yLjU4aC0uNTZsMS4xMy0yLjg4aC4yMmwxLjE1IDIuODh6TTUzLjQ2IDZsLS4zNCAxLjA1aC42OXptMS41NiAyVjUuMTloLjV2Mi4zOWgxLjI4di40NWgtMS43OHptMi43LTIuMzh2LjY2aC45M3YuNDNoLS45NHYuODVINTl2LjQ1aC0xLjhWNS4xOGgxLjgydi40NWgtMS4zek02MSA4LjAyIDYwLjMzIDdsLS42MiAxLjAyaC0uNTJsLjg1LTEuNDctLjc5LTEuMzdoLjUybC41Ny45Ni42NC0uOTZoLjUybC0uOSAxLjM4Ljk1IDEuNDZINjF6bTIuNSAwLS4yLS41OGgtLjk3bC0uMi41OGgtLjU2bDEuMTMtMi44OGguMjJsMS4xNCAyLjg4ek02Mi44MiA2bC0uMzQgMS4wNWguNjh6bTMuNDIgMi4wNS0xLjM4LTEuOHYxLjc2aC0uNDlWNS4xOGguMjVsMS4zNCAxLjcxVjUuMThoLjQ4djIuODh6bTEuNDEtLjA0aC0uNjNWNS4xOGwuNzYtLjAyYy40MSAwIC43NC4xMi45OC4zNi4yNC4yNS4zNy41Ny4zNy45NyAwIDEuMDItLjUgMS41My0xLjQ4IDEuNTN6bS0uMTItMi40djEuOTRsLjI2LjAxYy4yNSAwIC40NS0uMS42LS4yOC4xNC0uMTguMjEtLjQ0LjIxLS43NyAwLS42LS4yOC0uOTEtLjg0LS45MWwtLjIzLjAxem0zLjY0IDIuNC0uNzYtMS4xNy0uMzItLjAydjEuMTloLS41MlY1LjE4YTExLjMyIDExLjMyIDAgMCAwIC43OS0uMDNjLjcyIDAgMS4wOC4yOCAxLjA4Ljg0IDAgLjE3LS4wNS4zMi0uMTUuNDZhLjguOCAwIDAgMS0uMzguMjlsLjg0IDEuMjhoLS41OHptLTEuMDgtMi40di43OWguMjJjLjIgMCAuMzYtLjAyLjQ2LS4wOC4xLS4wNi4xNS0uMTguMTUtLjM1IDAtLjE0LS4wNi0uMjQtLjE2LS4yOWExLjEgMS4xIDAgMCAwLS41LS4wOGgtLjE3em0xLjktLjQ0aC41VjcuMWMwIC4xNi4wNi4yOC4xNS4zOC4xLjEuMjIuMTQuMzguMTRhLjYuNiAwIDAgMCAuNDMtLjE0LjUuNSAwIDAgMCAuMTUtLjM5VjUuMThoLjV2MS45NWMwIC4zLS4xLjUyLS4yOS42OS0uMi4xNi0uNDYuMjUtLjc4LjI1YTEuMSAxLjEgMCAwIDEtLjc3LS4yNS45LjkgMCAwIDEtLjI2LS42OVY1LjE4em0zLjkgMi44NFY1LjE4aC41djIuODR6bS45Ni0xLjQ1YzAtLjQuMTEtLjc0LjMzLTEuMDIuMjItLjI4LjUyLS40Mi44OS0uNDIuNCAwIC43Mi4xMy45NC4zOC4yMS4yNS4zMi42LjMyIDEuMDYgMCAuNDYtLjExLjgzLS4zNCAxLjEtLjIyLjI2LS41NC40LS45Ni40LS4zOCAwLS42Ny0uMTQtLjg4LS40YTEuOCAxLjggMCAwIDEtLjMtMS4xem0uNTIgMGMwIC4zNC4wNi42LjE3Ljc4LjExLjE4LjI4LjI3LjQ5LjI3LjI1IDAgLjQ0LS4wOS41OC0uMjcuMTMtLjE4LjItLjQ0LjItLjc4IDAtLjY2LS4yNS0xLS43NC0xYS42LjYgMCAwIDAtLjUyLjI4IDEuMyAxLjMgMCAwIDAtLjE4Ljcyem00LjA2IDEuNDUtLjItLjU4aC0uOThsLS4yLjU4aC0uNTZsMS4xMy0yLjg4aC4yM2wxLjE0IDIuODh6TTgwLjcyIDZsLS4zNCAxLjA1aC42OXptMy40MiAyLjA1LTEuMzgtMS44djEuNzZoLS40OFY1LjE4aC4yNGwxLjM0IDEuNzFWNS4xOGguNDh2Mi44OHptMy45My0yLjczLS4yMS40MmMtLjExLS4xMi0uMy0uMTctLjU0LS4xN2EuNy43IDAgMCAwLS41OC4zYy0uMTYuMi0uMjMuNDQtLjIzLjc1IDAgLjMuMDcuNTQuMi43Mi4xNS4xOC4zNC4yNy41Ny4yNy4yNyAwIC40OC0uMS42My0uMjlsLjIzLjRjLS4yLjIzLS41LjM0LS45LjM0cy0uNy0uMTMtLjkyLS40YTEuNiAxLjYgMCAwIDEtLjMzLTEuMDZjMC0uNDIuMTItLjc3LjM2LTEuMDYuMjUtLjI4LjU2LS40Mi45NC0uNDIuMzIgMCAuNTguMDcuNzguMnptLjQ4LS4xNWguNVY3LjFjMCAuMTYuMDUuMjguMTQuMzguMS4xLjIyLjE0LjM5LjE0YS42LjYgMCAwIDAgLjQyLS4xNC41LjUgMCAwIDAgLjE1LS4zOVY1LjE4aC41djEuOTVjMCAuMy0uMDkuNTItLjI5LjY5LS4yLjE2LS40NS4yNS0uNzguMjVhMS4xIDEuMSAwIDAgMS0uNzYtLjI1Yy0uMTgtLjE2LS4yNy0uMzktLjI3LS42OVY1LjE4em0yLjU1IDIuODR2LS4xNmwxLjE5LTIuMjNoLTEuMTd2LS40NWgxLjg1di4xNmwtMS4xOSAyLjIzaDEuMjR2LjQ1em00LjAyIDAtLjIxLS41OGgtLjk3bC0uMi41OGgtLjU2bDEuMTMtMi44OGguMjJsMS4xNCAyLjg4ek05NC40MiA2bC0uMzQgMS4wNWguNjh6bTIuMjEtLjkyLjE2LjIyYy0uMTIuMDktLjE5LjE2LS4yMi4yYS4yNi4yNiAwIDAgMC0uMDQuMTRjMCAuMDUuMDMuMTEuMS4xNy4wNi4wNy4xLjEzLjEuMiAwIC4yMi0uMTEuMzItLjMyLjMyYS4zLjMgMCAwIDEtLjI0LS4xLjQuNCAwIDAgMS0uMDktLjI3YzAtLjM2LjE5LS42NS41NS0uODh6bS45IDAgLjE1LjIyYy0uMTIuMDktLjE5LjE2LS4yMi4yYS4yNi4yNiAwIDAgMC0uMDQuMTRjMCAuMDUuMDQuMTEuMS4xNy4wNi4wNy4xLjEzLjEuMiAwIC4yMi0uMTEuMzItLjMyLjMyYS4zLjMgMCAwIDEtLjI0LS4xLjQuNCAwIDAgMS0uMDktLjI3YzAtLjM2LjE5LS42NS41NS0uODh6bTMuMjcgMi45M3YtLjEzYS41LjUgMCAwIDEtLjIuMTIuOS45IDAgMCAxLS4zLjA1Ljg4Ljg4IDAgMCAxLS42OC0uMjggMS4xIDEuMSAwIDAgMS0uMjUtLjc3YzAtLjMyLjEtLjU5LjI4LS44LjItLjIuNDMtLjMuNzItLjMuMTYgMCAuMy4wMy40My4xdi0uODRsLjQ4LS4xMnYyLjk3aC0uNDh6bTAtMS41OGEuNTEuNTEgMCAwIDAtLjMyLS4xMmMtLjIgMC0uMzUuMDUtLjQ1LjE3YS43OC43OCAwIDAgMC0uMTYuNTFjMCAuNDMuMjEuNjUuNjMuNjVsLjE3LS4wNGMuMDctLjAzLjExLS4wNi4xMy0uMDl6bTEuMzUtMS4zYS4zLjMgMCAwIDEgLjIuMDguMy4zIDAgMCAxIC4wOC4yLjMuMyAwIDAgMS0uMDguMi4yNy4yNyAwIDAgMS0uMi4wOC4yNy4yNyAwIDAgMS0uMi0uMDguMjcuMjcgMCAwIDEtLjA4LS4yYzAtLjA4LjAyLS4xNC4wOC0uMmEuMjcuMjcgMCAwIDEgLjItLjA4em0tLjI1IDIuODhWNi4zNGgtLjI3di0uNGguNzZ2Mi4wOGgtLjV6bTIuMzkgMHYtMS4yYzAtLjE4LS4wNC0uMy0uMS0uMzktLjA3LS4wOC0uMTgtLjEyLS4zNC0uMTJhLjUuNSAwIDAgMC0uMjIuMDYuNTIuNTIgMCAwIDAtLjIuMTV2MS41aC0uNDhWNS45NGguMzVsLjEuMmMuMTItLjE2LjMyLS4yNC41Ny0uMjQuMjUgMCAuNDUuMDguNTkuMjMuMTQuMTQuMjEuMzUuMjEuNjJ2MS4yN3ptMi4yNCAwVjUuMThoLjV2Mi44NHptMi43NSAwLS4yLS41OGgtLjk4bC0uMi41OGgtLjU2bDEuMTMtMi44OGguMjNsMS4xNCAyLjg4em0tLjctMi4wMS0uMzQgMS4wNWguNjl6TTExMCA3Ljg2bC4xOS0uNDVjLjIuMTQuNC4yLjU4LjIuMyAwIC40NS0uMS40NS0uM2EuNS41IDAgMCAwLS4xLS4yOCAxLjM0IDEuMzQgMCAwIDAtLjQ0LS4zYy0uMjItLjEtLjM2LS4yLS40NC0uMjZhLjczLjczIDAgMCAxLS4xNy0uMjUuODQuODQgMCAwIDEtLjA2LS4zM2MwLS4yMS4wOC0uNC4yNC0uNTRhLjg5Ljg5IDAgMCAxIC42Mi0uMjJjLjMyIDAgLjU3LjA2LjcyLjE5bC0uMTUuNDNhLjk1Ljk1IDAgMCAwLS41Ni0uMmMtLjEyIDAtLjIuMDQtLjI3LjFhLjMyLjMyIDAgMCAwLS4xLjI0YzAgLjE2LjE4LjMzLjU0LjUuMi4xLjMzLjE5LjQxLjI3LjA5LjA3LjE1LjE2LjIuMjcuMDQuMS4wNi4yMi4wNi4zNWEuNy43IDAgMCAxLS4yNy41NmMtLjE4LjE1LS40My4yMy0uNzMuMjMtLjI3IDAtLjUtLjA3LS43Mi0uMnptLjQ2Ljk4YS44LjggMCAwIDAgLjE5LjAyYy4xNCAwIC4yNi0uMDMuMzUtLjEuMS0uMDcuMTQtLjE3LjE0LS4zIDAtLjIxLS4xMi0uMzUtLjM1LS40bC0uMTYuMThjLjA0IDAgLjA3LjAzLjEuMDcuMDIuMDQuMDQuMDguMDQuMTMgMCAuMTEtLjA5LjE3LS4yNi4xN2wtLjEzLS4wMXptMS43Mi0uODJWNS4xOGguNXYyLjg0eiIvPjx0ZXh0IHhtbDpzcGFjZT0icHJlc2VydmUiIHN0eWxlPSItaW5rc2NhcGUtZm9udC1zcGVjaWZpY2F0aW9uOidEZWphVnUgU2FucywgQm9sZCBPYmxpcXVlIFNlbWktQ29uZGVuc2VkJyIgeD0iMTU2Ny4xOSIgeT0iNDkzLjA3IiBmb250LXN0eWxlPSJvYmxpcXVlIiBmb250LXdlaWdodD0iNzAwIiBmb250LXN0cmV0Y2g9InNlbWktY29uZGVuc2VkIiBmb250LXNpemU9IjEyLjc4IiBmb250LWZhbWlseT0iRGVqYVZ1IFNhbnMiIGZpbGw9IiNmZmYiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0zNjcuNTUgLTExNy40KSBzY2FsZSguMjY0NTgpIj48dHNwYW4geD0iMTU2Ny4xOSIgeT0iNDkzLjA3Ij5TZXJ2aWNpdWwgZGUgU3RhdGlzdGljxIMgyJlpIEluZm9ybWF0aXphcmU8L3RzcGFuPjwvdGV4dD48L3N2Zz4=';
-            const base64SVGdark = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDQ1LjE2IiBoZWlnaHQ9IjcyLjM5IiB2aWV3Qm94PSIwIDAgMTE3Ljc4IDE5LjE1IiB4bWw6c3BhY2U9InByZXNlcnZlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMCAwaDExNy43OHYxOS4xNUgweiIvPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik0xNC43IDUuMDJINi4zOXY0LjdjMCAxLjEyLjQ3IDIuMTQgMS4yMyAyLjg4YTQuMiA0LjIgMCAwIDAgNS44NyAwIDQuMDIgNC4wMiAwIDAgMCAxLjIzLTIuODh6Ii8+PHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik02LjczIDUuNHY0LjU4YTMuNzEgMy43MSAwIDAgMCAzLjggMy40MiAzLjcxIDMuNzEgMCAwIDAgMy44LTMuNDJWNS4zOXptNC4zIDMuMzNoLjM4di4yOWgtLjM4ek05LjggOC4yaDEuMzNjLjA0IDAgLjA3LjAyLjEuMDRIOS44NGEuNzYuNzYgMCAwIDAtLjA0LS4wNHptLS4wMy4wNC4wMy4wMnYuM2wtLjAzLS4wM3ptLjEuMDNoMS40YS4zLjMgMCAwIDEgLjAzLjA0SDkuOWwtLjAzLS4wNHptLS4wNS4wMS4wMi4wM3YuM2wtLjAyLS4wM1Y4LjN6bS4wNC4wNi4wMy4wNHYuMjZsLS4wMy0uMDJ2LS4yNHptLjA2IDBoMS40bC4wMi4wNGgtMS40YS43LjcgMCAwIDAtLjAyLS4wNHptLjA0LjA3aDEuMzl2LjA0SDkuOThhLjU2LjU2IDAgMCAwLS4wMi0uMDR6bS0uMDUgMCAuMDIuMDZ2LjIybC0uMDItLjAzdi0uMjR6bS4wOC4wN2gxYS4wNi4wNiAwIDAgMC0uMDMuMDRIMTBsLS4wMi0uMDR6bS0uMDQuMDMuMDIuMDd2LjE1bC0uMDItLjAydi0uMnptLS4xOC4yOC4wMy4wMnYuNzRsLS4wMy0uMDJ6bS4wNS4wNC4wMi4wMnYuNzRsLS4wMi0uMDJ6bS4wNC4wNC4wMy4wMnYuNzRsLS4wMy0uMDJ6bS4wNS4wNC4wMi4wMnYuNzVsLS4wMi0uMDN6bS4wNC4wNC4wMi4wMnYuNzVsLS4wMi0uMDJ6bS0uMTguODMuMDMuMDJ2LjE3aC0uMDN6bS4wNS4wNC4wMi4wMlYxMGwtLjAyLS4wMXptLjA0LjA0LjAzLjAydi4xNEw5Ljg2IDEwem0uMDUuMDQuMDIuMDJ2LjE1bC0uMDItLjAzem0uMDQuMDQuMDIuMDJ2LjE3YS40LjQgMCAwIDAtLjAyLS4wNHptLS4zMi0xLjQ5LjAyLjAyLjMzLjN2LjE4bC0uMzMtLjMzUzkuNiA4LjYgOS42IDguNWMwLS4wNC4wMS0uMDUuMDItLjA1em0uMTYuMTdjLjAyIDAgLjA0LjAyLjA0LjA2IDAgLjAzLS4wMi4wNi0uMDQuMDZzLS4wNC0uMDMtLjA0LS4wNmMwLS4wNC4wMi0uMDYuMDQtLjA2em0wIC4wM2MuMDEgMCAuMDIuMDEuMDIuMDNsLS4wMi4wMi0uMDItLjAyYzAtLjAyLjAxLS4wMy4wMi0uMDN6bS4yNy4xM2MuMDEgMCAuMDYgMCAuMDUuMSAwIC4wOS0uMDUuMDgtLjA1LjA4aC0uMDR2LS4xOGguMDR6bS0uNDMuNjYuMDIuMDIuMzMuM3YuMThsLS4zMy0uMzNzLS4wNS0uMDMtLjA1LS4xMmMwLS4wNC4wMS0uMDUuMDItLjA1em0uMTYuMTdjLjAyIDAgLjA0LjAyLjA0LjA2IDAgLjAzLS4wMi4wNi0uMDQuMDZzLS4wNC0uMDMtLjA0LS4wNmMwLS4wNC4wMi0uMDYuMDQtLjA2em0wIC4wM2MuMDEgMCAuMDIuMDEuMDIuMDNsLS4wMi4wMi0uMDItLjAyYzAtLjAyLjAxLS4wMy4wMi0uMDN6bS4yNy4xM2MuMDEgMCAuMDYgMCAuMDUuMSAwIC4wOS0uMDUuMDktLjA1LjA5aC0uMDR2LS4xOGguMDR6bS45Ny0uNWguMzh2LjI3aC0uMzh6bTAgLjUyaC4zOHYuMjVoLS4zOHptLjItMS42Ni4xOC4yMXYuMTNoLS4wM2EuMy4zIDAgMCAwLS4yNi0uM0g5Ljc1di4zNGwtLjA2LS4wNXYtLjM0aDEuNTN6bS0xLjU0LjU4LjA0LjA0LjAyLjAxdi43NGwtLjA2LS4wNnptMCAuOTkuMDQuMDQuMDIuMDF2LjJoLS4wNnptLjMzLTEuMTRoLjkzdi4xYzAgLjAzLjAyLjA1LjA0LjA2di4zYS4wNi4wNiAwIDAgMC0uMDQuMDZ2LjEzYzAgLjAzLjAyLjA1LjA0LjA2di4yN2EuMDYuMDYgMCAwIDAtLjA0LjA2di4xM2MwIC4wMi4wMi4wNC4wNC4wNXYuMjdhLjA2LjA2IDAgMCAwLS4wNC4wNnYuMTJoLS45M3YtLjI1aC4wNnMuMDcgMCAuMDctLjEyLS4wNy0uMTItLjA3LS4xMmgtLjA2VjloLjA2cy4wNyAwIC4wNy0uMTJjMC0uMDQgMC0uMDctLjAyLS4wOWEuMS4xIDAgMCAwIC4wNC4wMXYxLjE5YS4xLjEgMCAxIDAgLjA2LjAxbC4yOC0uNTguMjguNThhLjEuMSAwIDEgMCAuMDctLjAxdi0xLjJhLjEuMSAwIDEgMC0uMDgtLjAxbC0uMjcuNTYtLjI3LS41NmEuMS4xIDAgMCAwLS4wNi0uMi4xLjEgMCAwIDAtLjEuMTFjMCAuMDMgMCAuMDUuMDIuMDdoLS4wOHptLjE2LjA1Yy4wNCAwIC4wOC4wNC4wOC4wOGEuMDguMDggMCAwIDEtLjA4LjA4LjA4LjA4IDAgMSAxIDAtLjE2em0uNjYgMGMuMDQgMCAuMDguMDQuMDguMDhhLjA4LjA4IDAgMSAxLS4xNiAwYzAtLjA0LjA0LS4wOC4wOC0uMDh6bS0uMDMuMThoLjAydjEuMTloLS4wMmwtLjI5LS42em0tLjYgMCAuMjguNTktLjI5LjZWOC43OWguMDF6TTEwLjE4IDEwYy4wNCAwIC4wOC4wNC4wOC4wOGEuMDguMDggMCAxIDEtLjA4LS4wOHptLjY2IDBjLjA0IDAgLjA4LjA0LjA4LjA4YS4wOC4wOCAwIDEgMS0uMTYgMGMwLS4wNC4wNC0uMDguMDgtLjA4em0uMTgtMS41aC40Yy4wMSAwIC4wMy4wMi4wMy4wNHYuMTNjMCAuMDItLjAyLjAzLS4wNC4wM2gtLjRhLjAzLjAzIDAgMCAxLS4wMy0uMDN2LS4xM2MwLS4wMi4wMi0uMDMuMDQtLjAzem0wIC41NWguNGMuMDEgMCAuMDMuMDEuMDMuMDN2LjEzYzAgLjAyLS4wMi4wMy0uMDQuMDNoLS40YS4wMy4wMyAwIDAgMS0uMDMtLjAzdi0uMTNjMC0uMDIuMDItLjAzLjA0LS4wM3ptMCAuNTFoLjRjLjAxIDAgLjAzLjAyLjAzLjA0di4xM2MwIC4wMS0uMDIuMDMtLjA0LjAzaC0uNGEuMDMuMDMgMCAwIDEtLjAzLS4wM1Y5LjZjMC0uMDIuMDItLjA0LjA0LS4wNHptMCAuNTFoLjRjLjAxIDAgLjAzLjAyLjAzLjA0di4xMmMwIC4wMi0uMDIuMDQtLjA0LjA0aC0uNGEuMDMuMDMgMCAwIDEtLjAzLS4wNHYtLjEyYzAtLjAyLjAyLS4wNC4wNC0uMDR6TTcuOTkgNS42bC4xNi4xN2E0IDQgMCAwIDAgLjA5LjEzbC0uMDctLjAzYS40Mi40MiAwIDAgMS0uMDYtLjAzbC4wNC4xLjA1LjEtLjEtLjA4YS44OC44OCAwIDAgMS0uMDQtLjA2di4xMmEuNS41IDAgMCAxLS4wMy4xNEw4LjAxIDZ2LS4xbC0uMDUuMDYtLjEuMDkuMDUtLjEuMDQtLjEtLjA2LjAyYS4zOC4zOCAwIDAgMS0uMDcuMDNzLjEtLjE0LjEzLS4yMWwuMDUtLjF6bTQuNTcgMi43YS4wOC4wOCAwIDAgMC0uMDIuMTZ2LjA4aC0uMDRhLjA4LjA4IDAgMSAwIDAgLjAzaC4wNXYuMTVMMTEuNDcgOS44bC4wOC0uMDhhLjA4LjA4IDAgMCAwLS4wNy0uMDZWOS42YS4wNi4wNiAwIDAgMC0uMDQtLjA2di0uMjdhLjA2LjA2IDAgMCAwIC4wNC0uMDZ2LS4xM2EuMDYuMDYgMCAwIDAtLjA0LS4wNXYtLjNhLjA2LjA2IDAgMCAwIC4wNC0uMDZ2LS4xM2EuMDYuMDYgMCAwIDAtLjA0LS4wNnYtLjE1bC0uMTgtLjI0aC0uNjNsMi41NS0yLjU1aDEuMDJ2MS41MWwtLjU3LjU4di0uMThoLjA2YzAgLjAzLjAzLjA1LjA1LjA2bC4xLS4xYS4wOC4wOCAwIDAgMC0uMTYuMDFoLS4wNnYtLjA3Yy4wNC0uMDEuMDctLjA0LjA3LS4wOGEuMDguMDggMCAwIDAtLjA4LS4wOS4wOC4wOCAwIDAgMC0uMDguMDljMCAuMDQuMDMuMDcuMDYuMDh2LjA3aC0uMDVhLjA4LjA4IDAgMSAwIDAgLjAzaC4wNXYuMjFsLS44MS44MmEuMDguMDggMCAwIDAtLjE0LjA1aC0uMDZ2LS4wN2EuMDguMDggMCAwIDAtLjAyLS4xN3ptLjAyLjM5di0uMTJoLjA2bC4wMi4wNHptLjUyLTMuMDYuMDIuMDUuMTMuMjEtLjA3LS4wMi0uMDUtLjAzLjA0LjEuMDQuMS0uMS0uMDgtLjA0LS4wNlY2YzAgLjA2LS4wMy4xMy0uMDMuMTNMMTMuMDIgNnYtLjEybC0uMDUuMDYtLjEuMDguMDUtLjEuMDQtLjEtLjA1LjAzYS4zMy4zMyAwIDAgMS0uMDcuMDJ6bS43LjAzYS4wOC4wOCAwIDAgMSAwIC4xNnYuMDhoLjA3YS4wOC4wOCAwIDEgMSAwIC4wM2gtLjA2di4zYzAgLjA2LjAzLjEuMDcuMThsLjEzLjIyLS4wNy0uMDNhLjQzLjQzIDAgMCAxLS4wNi0uMDNsLjA0LjEuMDUuMS0uMS0uMDhhLjg4Ljg4IDAgMCAxLS4wNC0uMDZ2LjEyYzAgLjA2LS4wMy4xMy0uMDMuMTNsLS4wMi0uMTN2LS4xMmwtLjA1LjA2LS4xLjA5LjA1LS4xLjA0LS4xMS0uMDYuMDNhLjQuNCAwIDAgMS0uMDcuMDNzLjEtLjE0LjEzLS4yMmEuMzUuMzUgMCAwIDAgLjA2LS4xOHYtLjNoLS4wNmEuMDguMDggMCAxIDEgMC0uMDNoLjA2di0uMWEuMDguMDggMCAwIDEgLjAxLS4xNnptLTYuNTMuMDNhLjA4LjA4IDAgMCAxIC4wMi4xN3YuMDdoLjA2YS4wOC4wOCAwIDEgMSAwIC4wM2gtLjA2di4zYzAgLjA3LjAzLjExLjA3LjE5bC4xMy4yMS0uMDctLjAyYS40Mi40MiAwIDAgMS0uMDYtLjAzbC4wNC4xLjA1LjEtLjEtLjA4YTEgMSAwIDAgMS0uMDQtLjA2di4xMmMwIC4wNi0uMDMuMTMtLjAzLjEzbC0uMDItLjEzdi0uMTJsLS4wNS4wNi0uMS4wOC4wNS0uMS4wMy0uMS0uMDUuMDMtLjA3LjAycy4xLS4xMy4xMy0uMjFhLjQyLjQyIDAgMCAwIC4wNi0uMTl2LS4zSDcuMmEuMDguMDggMCAxIDEgMC0uMDNoLjA2di0uMDdhLjA4LjA4IDAgMCAxIC4wMi0uMTZ6bTUuNTIuOTJhLjA4LjA4IDAgMCAxIC4wMS4xNnYuMDhoLjA2YzAtLjA0LjA0LS4wNy4wOS0uMDdhLjA4LjA4IDAgMSAxLS4wOC4xaC0uMDd2LjNjLjAxLjA2LjAzLjEuMDcuMTlsLjEzLjIxLS4wNy0uMDNhLjQyLjQyIDAgMCAxLS4wNS0uMDNsLjA0LjEuMDQuMS0uMS0uMDhhMSAxIDAgMCAxLS4wNC0uMDZ2LjEybC0uMDIuMTRzLS4wMy0uMDctLjAzLS4xNHYtLjEybC0uMDUuMDYtLjEuMDkuMDUtLjEuMDQtLjEtLjA1LjAyYy0uMDIuMDItLjA3LjAzLS4wNy4wM2wuMTMtLjIxYy4wMi0uMDYuMDUtLjEyLjA2LS4xOXYtLjNoLS4wNmEuMDguMDggMCAwIDEtLjE2LS4wMmMwLS4wNS4wNC0uMDguMDgtLjA4cy4wOC4wMy4wOC4wN2guMDZ2LS4wOGEuMDguMDggMCAwIDEtLjA3LS4wOGMwLS4wNC4wMy0uMDguMDgtLjA4em0tNC41LjAyYy4wNSAwIC4wOS4wMy4wOS4wOCAwIC4wNC0uMDMuMDctLjA3LjA4di4wOGguMDZhLjA4LjA4IDAgMCAxIC4xNiAwIC4wOC4wOCAwIDAgMS0uMTYuMDNoLS4wNnYuM2MwIC4wNi4wMy4xLjA2LjE2bC4wMS4wMy4wOC4xMy4wNC4wNi4wMS4wMi0uMDctLjAzYS40NS40NSAwIDAgMS0uMDUtLjAzdi4wNGwuMDMuMDYuMDUuMS0uMS0uMDgtLjAxLS4wMi0uMDItLjAyLS4wMS0uMDJ2LjEyYS42LjYgMCAwIDEtLjAzLjEydi4wMWwtLjAyLS4xM1Y3LjZsLS4wNS4wNi0uMS4wOS4wNS0uMS4wNC0uMS0uMDUuMDItLjA4LjAzcy4xLS4xNC4xMy0uMjFhLjQyLjQyIDAgMCAwIC4wNi0uMTl2LS4zaC0uMDVhLjA4LjA4IDAgMSAxIDAtLjAzaC4wNXYtLjA4YS4wOC4wOCAwIDAgMSAuMDEtLjE2em0uODUuMTMuMTcuMTZhMS4yNCAxLjI0IDAgMCAwIC4wOC4ybC0uMS0uMDgtLjA1LS4wNnYuMTJsLS4wMi4xMy0uMDMtLjEzdi0uMTJsLS4wNS4wNi0uMDkuMDguMDUtLjEuMDMtLjEtLjA1LjAzYS40LjQgMCAwIDEtLjA3LjAzbC4xMy0uMjJ6bTIuOC4wMy4xMy4ycy0uMDUtLjAxLS4wNy0uMDNhLjQ1LjQ1IDAgMCAxLS4wNS0uMDMgMS4yNCAxLjI0IDAgMCAwIC4wOC4ybC0uMS0uMDgtLjA0LS4wNnYuMTJjMCAuMDctLjAzLjE0LS4wMy4xNGwtLjAyLS4xNHYtLjEybC0uMDUuMDYtLjEuMDkuMDUtLjEuMDItLjA3em0tNC40OS40MmEuMDguMDggMCAwIDAtLjAxLjE2di4wOGgtLjA1YS4wOC4wOCAwIDAgMC0uMTQtLjA2bC0uNC0uNFY1LjU1aDEuMDlsMi41NSAyLjU1aC0uODR2LjMzbC0uMDMtLjAzcy0uMDUtLjA0LS4wNS4wOC4wNS4xNy4wNS4xN2wuMDMuMDR2LjczbC0uMDMtLjAzcy0uMDUtLjA0LS4wNS4wOC4wNS4xNy4wNS4xN2EuMDguMDggMCAwIDAtLjA4LjA1bC0xLTF2LS4xaC4wN2MwIC4wMy4wNC4wNS4wOC4wNWEuMDguMDggMCAxIDAtLjA5LS4wOWgtLjA1di0uMDdjLjAzLS4wMS4wNi0uMDUuMDYtLjA5YS4wOC4wOCAwIDEgMC0uMS4wOXYuMDdoLS4wNWEuMDguMDggMCAwIDAtLjEyLS4wNmwtLjg3LS44OHYtLjEzaC4wNmMwIC4wMy4wNC4wNi4wOC4wNmEuMDguMDggMCAwIDAgMC0uMTcuMDguMDggMCAwIDAtLjA4LjA4aC0uMDZ2LS4wOGMuMDQgMCAuMDYtLjA0LjA2LS4wOGEuMDguMDggMCAwIDAtLjA4LS4wOHptLS4wOC4zLjAxLS4wM2guMDZ2LjFsLjAzLjAzem0xLjk4LjExYS4wOC4wOCAwIDAgMSAuMDIuMTd2LjA3aC4wNmMwLS4wNC4wNC0uMDcuMDgtLjA3YS4wOC4wOCAwIDEgMS0uMDguMWgtLjA2di4zYzAgLjA3LjAzLjExLjA3LjE5bC4xMy4yMS0uMDctLjAyLS4wNi0uMDMuMDQuMS4wNS4xLS4xLS4wOC0uMDQtLjA2di4xMmMwIC4wNi0uMDMuMTMtLjAzLjEzbC0uMDItLjEzVjguNmwtLjA1LjA2LS4xLjA4LjA1LS4xLjA0LS4xLS4wNi4wMy0uMDcuMDJzLjEtLjEzLjEzLS4yMWEuNDIuNDIgMCAwIDAgLjA2LS4xOXYtLjNoLS4wNWEuMDguMDggMCAwIDEtLjE3LS4wMmMwLS4wNC4wNC0uMDguMDktLjA4LjA0IDAgLjA3LjAzLjA4LjA3aC4wNXYtLjA3YS4wOC4wOCAwIDAgMS0uMDctLjA5YzAtLjA0LjA0LS4wOC4wOC0uMDh6bTIuMzYuMDJhLjA4LjA4IDAgMCAxIC4wMi4xNnYuMDhoLjA2YzAtLjA0LjAzLS4wOC4wOC0uMDhhLjA4LjA4IDAgMSAxLS4wOC4xaC0uMDZ2LjNjMCAuMDcuMDMuMTEuMDcuMmwuMTMuMnMtLjA1IDAtLjA4LS4wMmEuNDIuNDIgMCAwIDEtLjA1LS4wM2wuMDQuMS4wNS4xLS4xLS4wOC0uMDUtLjA2di4xMmwtLjAyLjEzLS4wMy0uMTNWOC42bC0uMDUuMDYtLjA5LjA5LjA1LS4xLjAzLS4xMS0uMDUuMDMtLjA3LjAzcy4xLS4xNC4xMy0uMjJjLjAyLS4wNS4wNi0uMTEuMDYtLjE4di0uM2gtLjA2YS4wOC4wOCAwIDEgMSAwLS4wM2guMDZ2LS4wOGEuMDguMDggMCAwIDEtLjA3LS4wOGMwLS4wNS4wNC0uMDguMDgtLjA4em0tMy4yNi45Ni4wMS0uMDJoLjA2di4wOHptMS4wMi44OGMuMDQgMCAuMDguMDMuMDguMDggMCAuMDQtLjAzLjA3LS4wNi4wOGwtLjEtLjFhLjA4LjA4IDAgMCAxIC4wOC0uMDZ6bTIuMTUuMDFjLjA0IDAgLjA4LjA0LjA4LjA4bC0uMS4xdi0uMDJhLjA4LjA4IDAgMCAxIC4wMi0uMTZ6bS0uMTguMzN2LjI0em0tLjkuNWMuMDUgMCAuMDkuMDQuMDkuMDhzLS4wMy4wOC0uMDcuMDh2LjA4aC4wNmMwLS4wNC4wNC0uMDcuMDgtLjA3cy4wOC4wMy4wOC4wOGEuMDguMDggMCAwIDEtLjE2LjAyaC0uMDZ2LjNjMCAuMDcuMDMuMS4wNy4xOWwuMTMuMjEtLjA3LS4wMi0uMDYtLjA0LjA0LjEuMDUuMTEtLjEtLjA5LS4wNS0uMDV2LjExbC0uMDIuMTQtLjAyLS4xNHYtLjExbC0uMDUuMDUtLjEuMDkuMDUtLjEuMDMtLjEtLjA1LjAzLS4wNy4wMnMuMS0uMTMuMTMtLjIxYS40Mi40MiAwIDAgMCAuMDYtLjE5di0uM2gtLjA2YS4wOC4wOCAwIDAgMS0uMDcuMDYuMDguMDggMCAwIDEgMC0uMTZjLjA0IDAgLjA3LjAzLjA4LjA3aC4wNXYtLjA4YS4wOC4wOCAwIDAgMSAuMDEtLjE2em0uOS4xLS4wMy4wNGguMDR2LjczYS4wOC4wOCAwIDAgMC0uMTIuMDcuMDguMDggMCAwIDAgLjEyLjA3di41bC0uMS4xNS4wNy0uMDIuMDItLjAydi4wOWwtLjA1LjEuMDUtLjA1di43NGgtLjAzYS4wOC4wOCAwIDEgMCAuMDMuMTV2LjIyYTMuODkgMy44OSAwIDAgMS0xLjc4IDBWMTNoLjAyYy4wNSAwIC4wOS0uMDMuMDktLjA4YS4wOC4wOCAwIDAgMC0uMTEtLjA4di0uNzVsLjA2LjA1LS4wNS0uMS0uMDEtLjAzdi0uMDZsLjAzLjAyLjA3LjAzLS4xLS4xNnYtLjVsLjA0LjAyYS4wOC4wOCAwIDAgMCAwLS4xN2wtLjA0LjAxdi0uNzZoLjAybC0uMDItLjAzVjEwYy4wMiAwIC4xNCAwIC4yMS4wNi4wOC4wNy4xLjIxLjEuMjFoMWMwIC4wMi4wMy4wMy4wNS4wM2guNGwuMDItLjAxdi4xMXptLS45IDEuNTNjLjA1IDAgLjA5LjAzLjA5LjA4IDAgLjA0LS4wMy4wNy0uMDcuMDh2LjA4aC4wNmEuMDguMDggMCAxIDEgMCAuMDNoLS4wNnYuM2MuMDEuMDYuMDMuMS4wNy4xOGwuMTMuMjItLjA3LS4wMy0uMDUtLjAzYTEuMTggMS4xOCAwIDAgMCAuMDguMmwtLjEtLjA4YS44NC44NCAwIDAgMS0uMDQtLjA2di4xMmMwIC4wNi0uMDMuMTMtLjAzLjEzbC0uMDItLjEzdi0uMTJsLS4wNS4wNi0uMS4wOS4wNS0uMS4wNC0uMTEtLjA1LjAzYS40LjQgMCAwIDEtLjA4LjAzbC4xNC0uMjJjLjAyLS4wNi4wNS0uMTEuMDUtLjE4di0uM2gtLjA1YS4wOC4wOCAwIDAgMS0uMTYtLjAyLjA4LjA4IDAgMCAxIC4xNi0uMDFoLjA1di0uMDhhLjA4LjA4IDAgMCAxLS4wNi0uMDhjMC0uMDUuMDMtLjA4LjA4LS4wOHptMC02LjIuMTcuNTUuMDEuMDEuNTctLjEzLS40LjQzdi4wMWwuNC40My0uNTctLjEzaC0uMDFsLS4xNy41Ni0uMTctLjU1LS4wMi0uMDEtLjU2LjEzLjQtLjQzVjYuNmwtLjQtLjQyLjU2LjEyaC4wMnptLS40LjE2LjIzLjMtLjAyLjA4LS4wNy0uMDJ6bS44MSAwLS4xNC4zNi0uMDguMDItLjAyLS4wN3ptLS41OC4wNi4wNC4xLS4wMi4wOXptLjM0IDAtLjAyLjE5LS4wMi0uMDh6bS0uNjQuMTcuMTUuMTItLjA4LS4wMnptLjk0IDAtLjA3LjEtLjA4LjAyem0tMS4xMS4zLjExLjAyLjA2LjA2em0xLjI4IDAtLjE3LjA4LjA2LS4wNnptLTEuMDguMTIuMDYuMDYtLjA1LjA1LS4zOS0uMDZ6bS44NyAwIC4zOS4wNi0uMzkuMDUtLjA1LS4wNXptLS45LjE1LS4wNi4wNi0uMTEuMDJ6bS45NCAwIC4xNy4wOC0uMTEtLjAxem0tLjY2LjI0LjAyLjA2LS4yNC4zLjE0LS4zNXptLjM4IDAgLjA3LjAxLjE0LjM3LS4yMy0uM3ptLS41MS4wMy0uMTUuMS4wNy0uMDl6bS42NCAwIC4wOC4wMS4wNy4xem0tLjQ3LjA5LjAyLjA4LS4wNC4xem0uMyAwIC4wMi4xOS0uMDQtLjF6bS0yLjM4IDIuNi4xOC41NC4wMS4wMS41Ni0uMTMtLjM5LjQzdi4wMWwuMzkuNDMtLjU2LS4xM2gtLjAxbC0uMTguNTYtLjE3LS41NS0uMDEtLjAxLS41Ni4xMy4zOS0uNDN2LS4wMWwtLjQtLjQzLjU3LjEzaC4wMXptLS40LjE0LjI0LjMtLjAzLjA4LS4wNi0uMDF6bS44MiAwLS4xNS4zNy0uMDcuMDEtLjAzLS4wNnptLS41OS4wNy4wNS4xLS4wMy4wOHptLjM1IDAtLjAyLjE5LS4wMy0uMDh6bS0uNjUuMTcuMTYuMTItLjA5LS4wMnptLjk1IDAtLjA3LjEtLjA4LjAxem0tMS4xMi4zLjEyLjAxLjA1LjA3em0xLjI5IDAtLjE4LjA4LjA2LS4wNnptLTEuMDguMTIuMDUuMDUtLjA1LjA2LS4zOC0uMDZ6bS44NyAwIC4zOC4wNi0uMzguMDUtLjA1LS4wNnptLS45LjE1LS4wNi4wNi0uMTIuMDF6bS45NCAwIC4xNy4wOC0uMTItLjAyem0tLjY3LjIzLjAyLjA3LS4yNC4zLjE1LS4zNXptLjM5IDAgLjA3LjAyLjE0LjM2LS4yNC0uM3ptLS41Mi4wMy0uMTUuMTEuMDctLjA5em0uNjUgMCAuMDguMDIuMDYuMXptLS40OC4xLjAzLjA4LS4wNS4xem0uMyAwIC4wMy4xOS0uMDUtLjF6bTQuMzMtMS4zMS4xNy41NWguMDJsLjU2LS4xMi0uNC40MnYuMDJsLjQuNDItLjU2LS4xMmgtLjAybC0uMTcuNTUtLjE3LS41NWgtLjAybC0uNTUuMTIuMzktLjQydi0uMDJsLS40LS40Mi41Ni4xMy4wMi0uMDF6bS0uNC4xNS4yMy4zLS4wMi4wOC0uMDctLjAxem0uODEgMC0uMTQuMzYtLjA4LjAyLS4wMi0uMDd6bS0uNTguMDcuMDQuMS0uMDIuMDh6bS4zNCAwLS4wMi4xOS0uMDItLjA5em0tLjY0LjE3LjE1LjExLS4wOC0uMDJ6bS45NCAwLS4wNy4xLS4wOC4wMXptLTEuMTEuMy4xMS4wMS4wNi4wNnptMS4yOCAwLS4xNy4wNy4wNi0uMDZ6bS0xLjA3LjExLjA1LjA2LS4wNS4wNS0uMzktLjA2em0uODYgMCAuMzkuMDctLjM4LjA1LS4wNi0uMDZ6bS0uOS4xNi0uMDYuMDYtLjExLjAxem0uOTQgMCAuMTcuMDdoLS4xMXptLS42Ni4yMy4wMi4wNy0uMjQuMy4xNC0uMzV6bS4zOCAwIC4wNy4wMi4xNC4zNi0uMjMtLjN6bS0uNTEuMDMtLjE1LjEuMDctLjA4em0uNjQgMCAuMDguMDIuMDcuMDl6bS0uNDcuMS4wMi4wOC0uMDQuMXptLjMgMCAuMDIuMTgtLjA0LS4xeiIvPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik0xOC41IDQuODhoLjV2MS45M2MwIC4xNS4wNS4yNy4xNS4zNy4wOS4xLjIyLjE0LjM4LjE0YS42LjYgMCAwIDAgLjQzLS4xNC41LjUgMCAwIDAgLjE1LS4zOFY0Ljg4aC41djEuOTVjMCAuMy0uMS41Mi0uMy42OS0uMTkuMTctLjQ1LjI1LS43OC4yNWExLjEgMS4xIDAgMCAxLS43Ni0uMjQuOTEuOTEgMCAwIDEtLjI3LS43VjQuODh6bTQuNTUgMi44OC0xLjM3LTEuOHYxLjc2aC0uNDlWNC44OGguMjRsMS4zNCAxLjcxVjQuOWguNDl2Mi44N2gtLjJ6bS44LS4wNFY0Ljg4aC41djIuODR6bTIuMTUuMDRoLS4yOGwtMS4wNi0yLjg4aC41NmwuNjUgMS45Mi43LTEuOTJoLjU0em0xLjkxLTIuNDN2LjY2aC45NHYuNDNoLS45NHYuODVoMS4yOXYuNDVoLTEuOFY0Ljg4aDEuODJ2LjQ1aC0xLjN6bTMuMzYgMi4zOS0uNzYtMS4xN2MtLjA4IDAtLjE4IDAtLjMyLS4wMnYxLjE5aC0uNTJWNC44OGExMS4zNyAxMS4zNyAwIDAgMCAuNzgtLjAzYy43MiAwIDEuMDguMjggMS4wOC44NCAwIC4xNy0uMDUuMzItLjE1LjQ2YS44LjggMCAwIDEtLjM3LjNsLjg0IDEuMjd6bS0xLjA4LTIuNHYuNzlsLjIxLjAxYy4yMSAwIC4zNy0uMDMuNDYtLjA5LjEtLjA2LjE1LS4xNy4xNS0uMzUgMC0uMTQtLjA1LS4yMy0uMTYtLjI5YTEuMSAxLjEgMCAwIDAtLjQ5LS4wOGwtLjE3LjAxem0xLjc2IDIuMjQuMTktLjQ1Yy4yLjE0LjQuMjEuNTkuMjEuMyAwIC40NC0uMS40NC0uMyAwLS4xLS4wMy0uMi0uMS0uMjlhMS4zMiAxLjMyIDAgMCAwLS40My0uM2MtLjIyLS4xLS4zNy0uMTktLjQ0LS4yNmEuNzMuNzMgMCAwIDEtLjE4LS4yNS44My44MyAwIDAgMS0uMDYtLjMyYzAtLjIyLjA4LS40LjI0LS41NWEuODkuODkgMCAwIDEgLjYyLS4yMmMuMzMgMCAuNTcuMDcuNzIuMTlsLS4xNS40M2EuOTUuOTUgMCAwIDAtLjU2LS4xOWMtLjEyIDAtLjIuMDMtLjI3LjFhLjMyLjMyIDAgMCAwLS4xLjIzYzAgLjE3LjE4LjM0LjU0LjUxLjIuMS4zMy4xOC40MS4yNi4wOS4wOC4xNS4xNy4yLjI3LjA0LjEuMDYuMjIuMDYuMzVhLjcuNyAwIDAgMS0uMjcuNTdjLS4xOC4xNC0uNDIuMjItLjczLjIyLS4yNiAwLS41LS4wNy0uNzItLjJ6bTIuMTguMTZWNC44OGguNXYyLjg0em0yLjI1LTIuNHYyLjRoLS41di0yLjRoLS45MXYtLjQ0aDIuMzV2LjQ1em0yLjU1IDIuNGguNTVsLTEuMTQtMi44OGgtLjIyTDM3IDcuNzJoLjU2bC4yLS41OGguOTd6bS0uNy0yIC4zNCAxLjA0aC0uNjh6bTIuMzMtLjR2Mi40aC0uNXYtMi40aC0uOXYtLjQ0aDIuMzV2LjQ1em0xLjc4IDBWNmguOTR2LjQzaC0uOTR2Ljg1aDEuMjl2LjQ1aC0xLjhWNC44OGgxLjgydi40NWgtMS4zMXptMy40IDIuNC0uMi0uNThoLS45N2wtLjIuNThoLS41NmwxLjEzLTIuODhoLjIybDEuMTQgMi44OHptLS42OS0yLS4zNCAxLjA0aC42OXptMy44NSAyLjcxLS4xNi0uMjFhMSAxIDAgMCAwIC4yMi0uMi4yNi4yNiAwIDAgMCAuMDQtLjE1YzAtLjA1LS4wMy0uMS0uMS0uMTdhLjI5LjI5IDAgMCAxLS4xLS4yYzAtLjIxLjExLS4zMi4zMi0uMzIuMSAwIC4xOC4wNC4yNC4xYS40LjQgMCAwIDEgLjA5LjI4YzAgLjM1LS4xOS42NC0uNTUuODd6bS44OSAwLS4xNi0uMjFhMSAxIDAgMCAwIC4yMi0uMi4yNi4yNiAwIDAgMCAuMDQtLjE1YzAtLjA1LS4wMy0uMS0uMS0uMTdhLjI5LjI5IDAgMCAxLS4xLS4yYzAtLjIxLjExLS4zMi4zMi0uMzIuMSAwIC4xOC4wNC4yNC4xYS40LjQgMCAwIDEgLjA5LjI4YzAgLjM1LS4xOC42NC0uNTUuODd6bTIuNzItLjcxLS4yLS41OGgtLjk4bC0uMi41OGgtLjU1bDEuMTMtMi44OGguMjJsMS4xNCAyLjg4em0tLjctMi0uMzMgMS4wNGguNjh6bTEuNTYgMlY0Ljg4aC41djIuNGgxLjI5di40NGgtMS43OXptMi43LTIuNFY2SDU3di40M2gtLjkzdi44NWgxLjI4di40NWgtMS43OVY0Ljg4aDEuODF2LjQ1aC0xLjN6bTMuMjggMi40LS42Ny0xLjAyLS42MiAxLjAyaC0uNTJsLjg1LTEuNDctLjc4LTEuMzdoLjUxbC41OC45Ni42My0uOTZoLjUzbC0uOSAxLjM4Ljk0IDEuNDZ6bTIuNSAwLS4yLS41OGgtLjk3bC0uMi41OGgtLjU2bDEuMTMtMi44OGguMjJsMS4xNCAyLjg4em0tLjY5LTItLjM0IDEuMDRoLjY4em0zLjQyIDIuMDQtMS4zOC0xLjh2MS43NmgtLjQ5VjQuODhoLjI1TDY0LjMgNi42VjQuOWguNDh2Mi44N2gtLjJ6bTEuNDEtLjA0aC0uNjNWNC44OGwuNzYtLjAyYy40MSAwIC43NC4xMi45OC4zNy4yNC4yNC4zNy41Ni4zNy45NiAwIDEuMDItLjUgMS41My0xLjQ4IDEuNTN6bS0uMTItMi40djEuOTRsLjI2LjAxYy4yNSAwIC40NS0uMDkuNi0uMjguMTQtLjE4LjIxLS40NC4yMS0uNzcgMC0uNi0uMjgtLjkxLS44NC0uOTFsLS4yMy4wMXptMy42NCAyLjQtLjc2LTEuMTdjLS4wNyAwLS4xOCAwLS4zMi0uMDJ2MS4xOWgtLjUyVjQuODhhMTEuMzcgMTEuMzcgMCAwIDAgLjc5LS4wM2MuNzIgMCAxLjA4LjI4IDEuMDguODQgMCAuMTctLjA1LjMyLS4xNS40NmEuOC44IDAgMCAxLS4zOC4zbC44NCAxLjI3em0tMS4wOC0yLjR2Ljc5bC4yMi4wMWMuMiAwIC4zNi0uMDMuNDYtLjA5LjEtLjA2LjE1LS4xNy4xNS0uMzVhLjMxLjMxIDAgMCAwLS4xNi0uMjkgMS4xIDEuMSAwIDAgMC0uNS0uMDhsLS4xNy4wMXptMS45LS40NGguNXYxLjkzYS41LjUgMCAwIDAgLjUzLjUxLjYuNiAwIDAgMCAuNDMtLjE0LjUuNSAwIDAgMCAuMTUtLjM4VjQuODhoLjV2MS45NWMwIC4zLS4xLjUyLS4zLjY5LS4xOS4xNy0uNDUuMjUtLjc3LjI1YTEuMSAxLjEgMCAwIDEtLjc3LS4yNC45MS45MSAwIDAgMS0uMjctLjdWNC44OHptMy45IDIuODRWNC44OGguNXYyLjg0em0uOTYtMS40NGMwLS40LjEtLjc1LjMzLTEuMDMuMjItLjI4LjUyLS40Mi44OS0uNDIuNCAwIC43Mi4xMy45My4zOC4yMi4yNS4zMy42LjMzIDEuMDcgMCAuNDUtLjEyLjgyLS4zNCAxLjA5LS4yMy4yNi0uNTUuNC0uOTYuNC0uMzggMC0uNjctLjEzLS44OC0uNGExLjggMS44IDAgMCAxLS4zLTEuMXptLjUyIDBjMCAuMzMuMDYuNTkuMTcuNzcuMTEuMTguMjcuMjcuNDkuMjcuMjUgMCAuNDQtLjA5LjU3LS4yNy4xNC0uMTcuMi0uNDMuMi0uNzcgMC0uNjctLjI0LTEtLjczLTEtLjIzIDAtLjQuMDktLjUyLjI3YTEuMyAxLjMgMCAwIDAtLjE4Ljczem00LjA2IDEuNDQtLjItLjU4aC0uOThsLS4yLjU4aC0uNTZsMS4xMy0yLjg4aC4yMmwxLjE0IDIuODh6bS0uNy0yLS4zNCAxLjA0aC42OHptMy40MiAyLjA0LTEuMzgtMS44djEuNzZoLS40OVY0Ljg4aC4yNUw4Mi4yIDYuNlY0LjloLjQ4djIuODdoLS4yem0zLjkyLTIuNzMtLjIuNDJjLS4xMi0uMTEtLjMtLjE3LS41NS0uMTdhLjcuNyAwIDAgMC0uNTguM2MtLjE1LjItLjIzLjQ1LS4yMy43NXMuMDcuNTQuMjEuNzJjLjE0LjE4LjMzLjI3LjU3LjI3LjI2IDAgLjQ3LS4xLjYyLS4yOWwuMjQuNDFjLS4yLjIyLS41LjMzLS45LjMzcy0uNy0uMTMtLjkzLS40YTEuNiAxLjYgMCAwIDEtLjMzLTEuMDZjMC0uNDIuMTItLjc3LjM3LTEuMDUuMjQtLjI5LjU1LS40My45My0uNDMuMzMgMCAuNTkuMDcuNzguMnptLjQ4LS4xNWguNXYxLjkzYS41LjUgMCAwIDAgLjUzLjUxLjYuNiAwIDAgMCAuNDMtLjE0LjUuNSAwIDAgMCAuMTUtLjM4VjQuODhoLjV2MS45NWMwIC4zLS4xLjUyLS4zLjY5LS4xOS4xNy0uNDUuMjUtLjc3LjI1YTEuMSAxLjEgMCAwIDEtLjc3LS4yNC45MS45MSAwIDAgMS0uMjctLjdWNC44OHptMi41NiAyLjg0di0uMTZsMS4xOC0yLjIzaC0xLjE2di0uNDVoMS44NXYuMTZsLTEuMiAyLjIzaDEuMjR2LjQ1em00LjAxIDAtLjItLjU4aC0uOThsLS4yLjU4aC0uNTZsMS4xMy0yLjg4aC4yM2wxLjE0IDIuODh6bS0uNy0yLS4zNCAxLjA0aC42OXptMi4yMi0uOTMuMTYuMjJjLS4xMi4xLS4yLjE2LS4yMi4yYS4yNi4yNiAwIDAgMC0uMDUuMTRjMCAuMDUuMDQuMTEuMS4xOC4wNi4wNi4xLjEzLjEuMiAwIC4yLS4xLjMxLS4zMS4zMWEuMy4zIDAgMCAxLS4yNS0uMS40LjQgMCAwIDEtLjA4LS4yN2MwLS4zNi4xOC0uNjUuNTUtLjg4em0uODkgMCAuMTYuMjJjLS4xMi4xLS4yLjE2LS4yMi4yYS4yNi4yNiAwIDAgMC0uMDQuMTRjMCAuMDUuMDMuMTEuMS4xOC4wNS4wNi4wOS4xMy4wOS4yIDAgLjItLjEuMzEtLjMxLjMxYS4zLjMgMCAwIDEtLjI1LS4xLjQuNCAwIDAgMS0uMDgtLjI3YzAtLjM2LjE4LS42NS41NS0uODh6bTMuMjcgMi45M3YtLjEzYS40OS40OSAwIDAgMS0uMi4xMi45LjkgMCAwIDEtLjMuMDUuODcuODcgMCAwIDEtLjY4LS4yOCAxLjEgMS4xIDAgMCAxLS4yNS0uNzZjMC0uMzMuMS0uNi4yOS0uOGEuOTIuOTIgMCAwIDEgLjcxLS4zMWMuMTYgMCAuMy4wMy40My4xdi0uODRsLjQ5LS4xMXYyLjk2aC0uNDl6bTAtMS41OGEuNTEuNTEgMCAwIDAtLjMyLS4xMi42LjYgMCAwIDAtLjQ1LjE3LjguOCAwIDAgMC0uMTYuNTFjMCAuNDMuMjEuNjUuNjMuNjVMOTkgNy4zYy4wNy0uMDMuMTEtLjA2LjEzLS4wOXptMS4zNS0xLjNhLjMuMyAwIDAgMSAuMi4wOC4zLjMgMCAwIDEgLjA4LjJjMCAuMDgtLjAzLjE1LS4wOC4yYS4yNy4yNyAwIDAgMS0uMi4wOC4yNy4yNyAwIDAgMS0uMi0uMDguMjcuMjcgMCAwIDEtLjA4LS4yLjMuMyAwIDAgMSAuMDgtLjIuMjcuMjcgMCAwIDEgLjItLjA4em0tLjI1IDIuODhWNi4wNGgtLjI3di0uNGguNzZ2Mi4wOHptMi4zOSAwdi0xLjJjMC0uMTgtLjA0LS4zLS4xLS4zOS0uMDctLjA4LS4xOC0uMTItLjMzLS4xMmEuNTEuNTEgMCAwIDAtLjIzLjA2LjUyLjUyIDAgMCAwLS4yLjE1djEuNWgtLjQ4VjUuNjVoLjM1bC4xLjE5Yy4xMi0uMTYuMzItLjIzLjU3LS4yMy4yNSAwIC40NS4wNy41OS4yMi4xNC4xNS4yMS4zNS4yMS42MnYxLjI3aC0uNDh6bTIuMjQgMFY0Ljg4aC41djIuODR6bTIuNzUgMC0uMi0uNThoLS45OGwtLjIuNThoLS41NmwxLjEzLTIuODhoLjIzbDEuMTQgMi44OHptLS43LTItLjM0IDEuMDRoLjY5em0xLjQyIDEuODQuMTktLjQ1Yy4yLjE0LjQuMjEuNTguMjEuMyAwIC40NS0uMS40NS0uMyAwLS4xLS4wNC0uMi0uMS0uMjlhMS4zMiAxLjMyIDAgMCAwLS40NC0uM2MtLjIyLS4xLS4zNi0uMTktLjQ0LS4yNmEuNzMuNzMgMCAwIDEtLjE3LS4yNS44My44MyAwIDAgMS0uMDYtLjMyYzAtLjIyLjA4LS40LjI0LS41NWEuODkuODkgMCAwIDEgLjYyLS4yMmMuMzIgMCAuNTcuMDcuNzIuMTlsLS4xNS40M2EuOTUuOTUgMCAwIDAtLjU2LS4xOWMtLjEyIDAtLjIxLjAzLS4yNy4xYS4zMi4zMiAwIDAgMC0uMS4yM2MwIC4xNy4xOC4zNC41NC41MS4xOS4xLjMzLjE4LjQxLjI2LjA4LjA4LjE1LjE3LjIuMjcuMDQuMS4wNi4yMi4wNi4zNWEuNy43IDAgMCAxLS4yNy41N2MtLjE4LjE0LS40My4yMi0uNzMuMjItLjI3IDAtLjUtLjA3LS43Mi0uMnptLjQ2Ljk4Yy4wNi4wMi4xMi4wMi4xOS4wMi4xNCAwIC4yNi0uMDMuMzUtLjEuMS0uMDcuMTQtLjE3LjE0LS4zIDAtLjIxLS4xMi0uMzUtLjM1LS40bC0uMTYuMThjLjA0IDAgLjA3LjAzLjEuMDcuMDIuMDQuMDQuMDkuMDQuMTMgMCAuMTItLjA5LjE3LS4yNi4xN2wtLjEzLS4wMXptMS43MS0uODJWNC44OGguNXYyLjg0eiIvPjx0ZXh0IHhtbDpzcGFjZT0icHJlc2VydmUiIHg9IjI1Ni45OSIgeT0iNTY1LjM3IiBmb250LXNpemU9IjEyLjc4IiBmaWxsPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEuMDciIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMi40NCAtMTM2LjQ1KSBzY2FsZSguMjY0NTgpIj48dHNwYW4geD0iMjU2Ljk5IiB5PSI1NjUuMzciIHN0eWxlPSItaW5rc2NhcGUtZm9udC1zcGVjaWZpY2F0aW9uOidEZWphVnUgU2FucywgQm9sZCBPYmxpcXVlIFNlbWktQ29uZGVuc2VkJztmb250LXZhcmlhbnQtbGlnYXR1cmVzOm5vcm1hbDtmb250LXZhcmlhbnQtY2Fwczpub3JtYWw7Zm9udC12YXJpYW50LW51bWVyaWM6bm9ybWFsO2ZvbnQtdmFyaWFudC1lYXN0LWFzaWFuOm5vcm1hbCIgZm9udC1zdHlsZT0ib2JsaXF1ZSIgZm9udC13ZWlnaHQ9IjcwMCIgZm9udC1zdHJldGNoPSJzZW1pLWNvbmRlbnNlZCIgZm9udC1mYW1pbHk9IkRlamFWdSBTYW5zIj5TZXJ2aWNpdWwgZGUgU3RhdGlzdGljxIMgyJlpIEluZm9ybWF0aXphcmU8L3RzcGFuPjwvdGV4dD48L3N2Zz4=';
+            fetchSvgContent(`banner-light`)
+                .then((svgContent) => {
+                    // Create an image element
+                    const imgElementLight = document.createElement("img");
+                    imgElementLight.src = svgContent;
+                    imgElementLight.id = "banner-light";
 
-            // Create an image element
-            const imgElementLight = document.createElement('img');
-            imgElementLight.src = base64SVG;
-            imgElementLight.id = 'banner-light';
+                    // Append the image to the new div
+                    newBanner.appendChild(imgElementLight);
+                })
+                .catch((error) => {
+                    console.error("Error fetching SVG content:", error);
+                });
 
-            // Append the image to the new div
-            newBanner.appendChild(imgElementLight);
+            fetchSvgContent(`banner-dark`)
+                .then((svgContent) => {
+                    // Create an image element
+                    const imgElementDark = document.createElement("img");
+                    imgElementDark.src = svgContent;
+                    imgElementDark.id = "banner-dark";
 
-            // Create an image element
-            const imgElementDark = document.createElement('img');
-            imgElementDark.src = base64SVGdark;
-            imgElementDark.id = 'banner-dark';
-
-            // Append the image to the new div
-            newBanner.appendChild(imgElementDark);
+                    // Append the image to the new div
+                    newBanner.appendChild(imgElementDark);
+                })
+                .catch((error) => {
+                    console.error("Error fetching SVG content:", error);
+                });
 
             // Append the new div to the body
             document.body.appendChild(newBanner);
         }
 
-        const TextContainer = document.querySelector('div.container:nth-child(1)');
+        // Check if there's already a favicon link
+        let favicon = document.querySelector('link[rel="icon"]');
+
+        if (!favicon) {
+            // If no favicon exists, create one
+            favicon = document.createElement("link");
+            favicon.rel = "icon";
+            document.head.appendChild(favicon);
+        }
+
+        fetchSvgContent(`favicon`)
+            .then((svgContent) => {
+                favicon.href = svgContent;
+            })
+            .catch((error) => {
+                console.error("Error fetching SVG content:", error);
+            });
+
+        const TextContainer = document.querySelector(
+            "div.container:nth-child(1)"
+        );
         if (TextContainer) {
             TextContainer.innerHTML = `
                 <h5 align="center">eSIMS</h5>
@@ -269,13 +357,14 @@
                     <li>După mai multe încercări de conectare eşuate, contul este blocat şi apoi şters.</li>
                     <li>Nu se pot crea mai multe conturi folosind aceeaşi adresă de email.</li>
                   </ul><br>
-                <h5 align="center">După ştergerea contului acesta poate fi creat din nou.</h5><br>  `
+                <h5 align="center">După ştergerea contului acesta poate fi creat din nou.</h5><br>  `;
         }
 
         const currentURL = window.location.href;
-        const loginRegister = document.querySelector('#loginregister');
-        const passwordRecoveryPage = 'https://simsweb.uaic.ro/eSIMS/RecoverPassword.aspx';
-        const RegisterPage = 'https://simsweb.uaic.ro/eSIMS/Register.aspx';
+        const loginRegister = document.querySelector("#loginregister");
+        const passwordRecoveryPage =
+            "https://simsweb.uaic.ro/eSIMS/RecoverPassword.aspx";
+        const RegisterPage = "https://simsweb.uaic.ro/eSIMS/Register.aspx";
         if (loginRegister && currentURL === passwordRecoveryPage) {
             loginRegister.innerHTML = `
                 <fieldset>
@@ -297,16 +386,22 @@
                   </form>
                 </fieldset>
               `;
-              document.getElementById("password-recovery-form").addEventListener("submit", function(event) {
-                  const usernameInput = document.getElementById("username");
+            document
+                .getElementById("password-recovery-form")
+                .addEventListener("submit", function (event) {
+                    const usernameInput = document.getElementById("username");
 
-                  if (usernameInput.value.trim() === "") {
-                      event.preventDefault();
-                      document.getElementById("username-required").style.display = "inline";
-                      document.getElementById("error-message").style.display = "block";
-                      document.getElementById("error-message").textContent = "Număr matricol obligatoriu.";
-                  }
-              });
+                    if (usernameInput.value.trim() === "") {
+                        event.preventDefault();
+                        document.getElementById(
+                            "username-required"
+                        ).style.display = "inline";
+                        document.getElementById("error-message").style.display =
+                            "block";
+                        document.getElementById("error-message").textContent =
+                            "Număr matricol obligatoriu.";
+                    }
+                });
         } else if (loginRegister && currentURL === RegisterPage) {
             loginRegister.innerHTML = `
                 <a name="content_start" id="content_start"></a>
@@ -354,15 +449,190 @@
             `;
         }
 
-        const LoginPage = 'https://simsweb.uaic.ro/eSIMS/MyLogin.aspx?ReturnUrl=%2feSIMS%2fdefault.aspx';
+        let isUserLoggedIn = false;
+
+        // Function to extract the values and send the POST request
+        async function submitLogin() {
+            // Select form fields by their IDs
+            const viewState = document.getElementById("__VIEWSTATE").value;
+            const viewStateGen = document.getElementById(
+                "__VIEWSTATEGENERATOR"
+            ).value;
+            const eventValidation =
+                document.getElementById("__EVENTVALIDATION").value;
+            const userName = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const rememberMe = document.getElementById("remember-me").checked;
+
+            // Prepare the data for the POST request
+            const formData = new URLSearchParams();
+            formData.append("__WPPS", "s");
+            formData.append("__LASTFOCUS", "");
+            formData.append("ctl00_mainCopy_ScriptManager1_HiddenField", "");
+            formData.append("__EVENTTARGET", "");
+            formData.append("__EVENTARGUMENT", "");
+            formData.append("ctl00_subnavTreeview_ExpandState", "");
+            formData.append("ctl00_subnavTreeview_SelectedNode", "");
+            formData.append("ctl00_subnavTreeview_PopulateLog", "");
+            formData.append("__VIEWSTATE", viewState);
+            formData.append("__VIEWSTATEGENERATOR", viewStateGen);
+            formData.append("__EVENTVALIDATION", eventValidation);
+            formData.append("ctl00$mainCopy$Login1$UserName", userName);
+            formData.append("ctl00$mainCopy$Login1$Password", password);
+            if (rememberMe) {
+                formData.append("ctl00$mainCopy$Login1$RememberMe", "on");
+            }
+            formData.append("ctl00$mainCopy$Login1$LoginButton", "Conectare");
+
+            GM.xmlHttpRequest({
+                method: "POST",
+                url: "https://simsweb.uaic.ro/eSIMS/MyLogin.aspx?ReturnUrl=%2feSIMS%2fMembers%2fDefault.aspx",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    Host: "simsweb.uaic.ro",
+                    "User-Agent": navigator.userAgent, // Use the browser's User-Agent
+                    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.5",
+                    "Accept-Encoding": "gzip, deflate, br, zstd",
+                    Origin: "https://simsweb.uaic.ro",
+                    DNT: "1",
+                    "Sec-GPC": "1",
+                    Connection: "keep-alive",
+                    Referer:
+                        "https://simsweb.uaic.ro/eSIMS/MyLogin.aspx?ReturnUrl=%2feSIMS%2fMembers%2fDefault.aspx",
+                    "Upgrade-Insecure-Requests": "1",
+                    "Sec-Fetch-Dest": "document",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-Site": "same-origin",
+                    "Sec-Fetch-User": "?1",
+                    Priority: "u=0, i",
+                },
+                data: formData.toString(),
+                onload: function (response) {
+                    if (response.status === 200) {
+                        console.log("Login successful");
+                        isUserLoggedIn = true;
+                        sessionStorage.setItem("isUserLoggedIn", "true");
+
+                        // Get the Set-Cookie header and store the cookie
+                        const setCookieHeader =
+                            response.responseHeaders.match(
+                                /Set-Cookie: (.*?);/i
+                            );
+                        if (setCookieHeader && setCookieHeader[1]) {
+                            const cookieValue = setCookieHeader[1];
+                            GM.setValue("loginCookie", cookieValue);
+                            console.log("Cookie stored:", cookieValue);
+                        }
+                        window.location.href =
+                            "https://simsweb.uaic.ro/eSIMS/Members/Default.aspx";
+                    } else {
+                        console.error("Login failed");
+                    }
+                },
+                onerror: function (error) {
+                    console.error("Network Error:", error);
+                },
+            });
+        }
+
+        async function submitLogout() {
+            // Select form fields by their IDs
+            const viewState = document.getElementById("__VIEWSTATE").value;
+            const viewStateGen = document.getElementById(
+                "__VIEWSTATEGENERATOR"
+            ).value;
+            const eventValidation =
+                document.getElementById("__EVENTVALIDATION").value;
+
+            // Prepare the data for the POST request
+            const formData = new URLSearchParams();
+            formData.append("__WPPS", "u");
+            formData.append("__EVENTTARGET", "ctl00$LoginStatus1$ctl00");
+            formData.append("__EVENTARGUMENT", "");
+            formData.append("ctl00_subnavTreeview_ExpandState", "");
+            formData.append("ctl00_subnavTreeview_SelectedNode", "");
+            formData.append("ctl00_subnavTreeview_PopulateLog", "");
+            formData.append("__VIEWSTATE", viewState);
+            formData.append("__VIEWSTATEGENERATOR", viewStateGen);
+            formData.append("__EVENTVALIDATION", eventValidation);
+
+            GM.xmlHttpRequest({
+                method: "POST",
+                url: "https://simsweb.uaic.ro/eSIMS/Members/default.aspx",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    Host: "simsweb.uaic.ro",
+                    "User-Agent": navigator.userAgent,
+                    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.5",
+                    "Accept-Encoding": "gzip, deflate, br, zstd",
+                    Origin: "https://simsweb.uaic.ro",
+                    DNT: "1",
+                    "Sec-GPC": "1",
+                    Connection: "keep-alive",
+                    Referer:
+                        "https://simsweb.uaic.ro/eSIMS/Members/default.aspx",
+                    "Upgrade-Insecure-Requests": "1",
+                    "Sec-Fetch-Dest": "document",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-Site": "same-origin",
+                    "Sec-Fetch-User": "?1",
+                    Priority: "u=0, i",
+                },
+                data: formData.toString(),
+                onload: function (response) {
+                    if (response.status === 200) {
+                        console.log("Logout successful");
+
+                        const setCookieHeader =
+                            response.responseHeaders.match(
+                                /Set-Cookie: (.*?);/i
+                            );
+                        if (setCookieHeader && setCookieHeader[1]) {
+                            const cookieValue = setCookieHeader[1];
+                            GM.setValue("loginCookie", cookieValue);
+                            console.log("Cookie deleted");
+                        }
+                        isUserLoggedIn = false;
+                        sessionStorage.setItem("isUserLoggedIn", "false");
+                        window.location.href =
+                            "https://simsweb.uaic.ro/eSIMS/Default.aspx";
+                    } else {
+                        console.error("Logout failed");
+                    }
+                },
+                onerror: function (error) {
+                    console.error("Network Error:", error);
+                },
+            });
+        }
+
+        // logout button
+        if (JSON.parse(sessionStorage.getItem("isUserLoggedIn")) === true) {
+            if (loginLink && loginLink.textContent.trim() === "Logout") {
+                const logoutButton = document.createElement("button");
+                logoutButton.textContent = "Logout";
+                logoutButton.setAttribute("id", "logout-page-button");
+                logoutButton.setAttribute("class", "account");
+                logoutButton.addEventListener("click", submitLogout);
+
+                // Replace the link with the button
+                loginLink.replaceWith(logoutButton);
+            }
+        }
+
+        const LoginPage =
+            "https://simsweb.uaic.ro/eSIMS/MyLogin.aspx?ReturnUrl=%2feSIMS%2fdefault.aspx";
         // Check if the current URL matches
         if (currentURL === LoginPage) {
-            const loginPage = document.querySelector('#copy > div:nth-child(2)');
+            const loginPage = document.querySelector(
+                "#copy > div:nth-child(2)"
+            );
 
             if (loginPage) {
-                loginPage.id = 'login-div';
+                loginPage.id = "login-div";
                 loginPage.innerHTML = `
-                    <form name="aspnetForm" method="post" action="MyLogin.aspx?ReturnUrl=%2feSIMS%2fdefault.aspx" onsubmit="javascript:return WebForm_OnSubmit();" id="aspnetForm">
                         <fieldset>
                           <legend>Pagina de conectare</legend>
 
@@ -384,20 +654,502 @@
                           </div>
 
                           <div class="form-group">
-                            <button type="submit" id="login-button" class="submit">Conectare</button>
+                            <button type="submit" id="login-button" class="login-button"> Conectare</button>
                           </div>
 
                         </fieldset>
-                    </form>
                     <button id="create-account" class="submit">Creare cont nou</button>
                 `;
-                const createAccountButton = document.querySelector('#create-account');
-                createAccountButton.addEventListener('click', function() {
-                    window.location.href = 'https://simsweb.uaic.ro/eSIMS/Register.aspx';
+                const createAccountButton =
+                    document.querySelector("#create-account");
+                createAccountButton.addEventListener("click", function () {
+                    window.location.href =
+                        "https://simsweb.uaic.ro/eSIMS/Register.aspx";
                 });
+            }
+
+            // Call the function when the button is clicked
+            document
+                .getElementById("login-button")
+                .addEventListener("click", submitLogin);
+        }
+
+        //const MembersPage = 'https://simsweb.uaic.ro/eSIMS/Members/Default.aspx';
+        // Check if the current URL matches
+        //if (currentURL === LoginPage) {
+        if (sessionStorage.getItem("isUserLoggedIn") === "true") {
+            console.info("weeee user page");
+            if (loginLink && loginLink.textContent.trim() === "Logout") {
+                const logoutButton = document.createElement("button");
+                logoutButton.textContent = "Logout";
+                logoutButton.setAttribute("id", "logout-page-button");
+                logoutButton.setAttribute("class", "account");
+                logoutButton.addEventListener("click", function () {
+                    document.cookie =
+                        "security=; Max-Age=0; path=/; domain=simsweb.uaic.ro; Secure; HttpOnly";
+                    sessionStorage.setItem("isUserLoggedIn", "false");
+                    window.location.href = "https://simsweb.uaic.ro/eSIMS/";
+                    __doPostBack("ctl00$LoginStatus1$ctl00", "");
+                });
+
+                // Replace the link with the button
+                loginLink.replaceWith(logoutButton);
+            }
+
+            const passwordRecoveryButton = document.querySelector(
+                "#password-recovery-button"
+            );
+            if (passwordRecoveryButton) {
+                passwordRecoveryButton.style.display = "none";
+            }
+
+            // Replace #ctl00_LoginName1 with a span with a better ID
+            const loginNameElement =
+                document.querySelector("#ctl00_LoginName1");
+            if (loginNameElement) {
+                const newSpan = document.createElement("span");
+                newSpan.id = "user-login-name";
+                newSpan.textContent = "UserID: " + loginNameElement.textContent;
+
+                loginNameElement.replaceWith(newSpan);
+            }
+
+            const MembersButtons = document.querySelector("#subnav");
+
+            if (MembersButtons) {
+                MembersButtons.innerHTML = `
+                  <a href="#subnav_skip_link" aria-label="Skip Navigation Links">
+                    <img alt="Skip Navigation Links" src="/eSIMS/WebResource.axd?d=1pSzIWVbNnXjyFOVbiGkcfko30xsHz-djLmbuGdWFuSAWooUvNVNtIc5EI9PW_1D3ve4iAPIsljWPk-FrS7qwZnd7Co1&amp;t=638250744092864286" width="0" height="0" style="border: none;">
+                  </a>
+
+                  <ul class="subnav-list">
+                    <li>
+                      <a href="/eSIMS/Members/ChangePassword.aspx" title="Change password" id="change-password-link">
+                        <?xml version="1.0" encoding="UTF-8"?><svg width="24px" stroke-width="1.5" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" color="#000000" style="--darkreader-inline-color: #e8e6e3;" data-darkreader-inline-color=""><path d="M4 19V5C4 3.89543 4.89543 3 6 3H19.4C19.7314 3 20 3.26863 20 3.6V16.7143" stroke="#000000" stroke-width="1.5" stroke-linecap="round" style="--darkreader-inline-stroke: #000000;" data-darkreader-inline-stroke=""></path><path d="M8 3V11L10.5 9.4L13 11V3" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: #000000;" data-darkreader-inline-stroke=""></path><path d="M6 17L20 17" stroke="#000000" stroke-width="1.5" stroke-linecap="round" style="--darkreader-inline-stroke: #000000;" data-darkreader-inline-stroke=""></path><path d="M6 21L20 21" stroke="#000000" stroke-width="1.5" stroke-linecap="round" style="--darkreader-inline-stroke: #000000;" data-darkreader-inline-stroke=""></path><path d="M6 21C4.89543 21 4 20.1046 4 19C4 17.8954 4.89543 17 6 17" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="--darkreader-inline-stroke: #000000;" data-darkreader-inline-stroke=""></path></svg>
+                        Schimbare parolă
+                      </a>
+                    </li>
+                    <li>
+                      <a href="/eSIMS/Members/StudentPage.aspx" title="Student page with grades and fees" id="student-page-link">
+                        <?xml version="1.0" encoding="UTF-8"?><svg width="24px" height="24px" viewBox="0 0 24 24" stroke-width="1.5" fill="none" xmlns="http://www.w3.org/2000/svg" color="#000000"><path d="M2.57331 8.46334L11.2317 4.13416C11.4006 4.04971 11.5994 4.04971 11.7683 4.13416L20.4267 8.46334C20.8689 8.68446 20.8689 9.31554 20.4267 9.53666L11.7683 13.8658C11.5994 13.9503 11.4006 13.9503 11.2317 13.8658L2.57331 9.53666C2.13108 9.31554 2.13108 8.68446 2.57331 8.46334Z" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M22.5 13L22.5 9.5L20.5 8.5" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4.5 10.5V15.9121C4.5 16.6843 4.94459 17.3876 5.6422 17.7188L10.6422 20.0928C11.185 20.3505 11.815 20.3505 12.3578 20.0928L17.3578 17.7188C18.0554 17.3876 18.5 16.6843 18.5 15.9121V10.5" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                        Note, taxe
+                      </a>
+                    </li>
+                  </ul>
+
+                  <a id="subnav_skip_link"></a>
+
+                `;
+            }
+
+            // Find the wrapper element
+            const wrapper = document.getElementById("wrapper");
+
+            // Iterate over child nodes and remove text nodes
+            for (let node of wrapper.childNodes) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    wrapper.removeChild(node);
+                }
+            }
+            const StudentPage =
+                "https://simsweb.uaic.ro/eSIMS/Members/StudentPage.aspx";
+
+            if (currentURL === StudentPage) {
+                const loadingBox = document.createElement("div");
+                loadingBox.style.position = "fixed";
+                loadingBox.style.top = "0";
+                loadingBox.style.left = "0";
+                loadingBox.style.width = "100%";
+                loadingBox.style.height = "100%";
+                loadingBox.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+                loadingBox.style.display = "flex";
+                loadingBox.style.justifyContent = "center";
+                loadingBox.style.alignItems = "center";
+                loadingBox.style.zIndex = "1000";
+                loadingBox.innerHTML =
+                    "<div style='color: white; font-size: 24px;'>Loading...</div>";
+
+                document.body.appendChild(loadingBox);
+
+                function copyXreplace() {
+                    const copyXDiv = document.getElementById("copyX");
+                    const table = copyXDiv.querySelector(
+                        "table#ctl00_WebPartManagerPanel1_WebPartManager1_wp1036597691_wp1789031903_gridStudenti"
+                    );
+                    const rows = table.querySelectorAll("tbody tr");
+
+                    const data = [];
+                    rows.forEach((row, index) => {
+                        if (index === 0) return; // Skip header row
+                        const cells = row.querySelectorAll("td");
+                        const rowData = {
+                            anScolar: cells[0].innerText,
+                            anStudiu: cells[1].innerText,
+                            semestru: cells[2].innerText,
+                            grupa: cells[3].innerText,
+                            specializare: cells[4].innerText,
+                            detalii: cells[5].querySelector("a").href,
+                        };
+                        data.push(rowData);
+                    });
+
+                    // Create new div elements to replace the table
+                    const newDiv = document.createElement("div");
+                    newDiv.id = "newCopyX";
+                    data.forEach((item) => {
+                        const itemDiv = document.createElement("div");
+                        itemDiv.className = "student-info";
+                        itemDiv.innerHTML = `
+                        <span><strong>An Scolar:</strong><p>${item.anScolar}</p></span>
+                        <span><strong>An Studiu:</strong><p>${item.anStudiu}</p></span>
+                        <span><strong>Semestru:</strong><p>${item.semestru}</p></span>
+                        <span><strong>Grupa:</strong><p>${item.grupa}</p></span>
+                        <span><strong>Specializare:</strong><p>${item.specializare}</p></span>
+                    `; // <span><a href="${item.detalii}">Detalii</a></span>
+                        newDiv.appendChild(itemDiv);
+                    });
+
+                    // Replace the old table with the new div
+                    copyXDiv.innerHTML = "";
+                    copyXDiv.replaceWith(newDiv);
+                }
+
+                copyXreplace();
+
+                const contentWrapperWP =
+                    document.getElementById("contentwrapperWP");
+
+                function transformDetaliiStudent() {
+                    const table = document.querySelector(
+                        "table#ctl00_WebPartManagerPanel1_WebPartManager1_wp698779781_wp1318475282_DetailsView1"
+                    );
+                    if (!table) return;
+
+                    const rows = table.querySelectorAll("tbody tr");
+                    const data = [];
+                    rows.forEach((row) => {
+                        const cells = row.querySelectorAll("td");
+                        if (cells.length >= 2) {
+                            data.push({
+                                label: cells[0].innerText.trim(),
+                                value: cells[1].innerText.trim(),
+                            });
+                        }
+                    });
+
+                    const newDiv = document.createElement("div");
+                    newDiv.id = "newDetaliiStudent";
+                    newDiv.innerHTML = "<h2>Detalii student</h2>";
+                    const parentDiv = document.createElement("div");
+                    parentDiv.className = "student-info";
+                    data.forEach((item) => {
+                        if (item.value) {
+                            const span = document.createElement("span");
+                            span.innerHTML = `<strong>${item.label}:</strong><p>${item.value}</p>`;
+                            parentDiv.appendChild(span);
+                        }
+                    });
+
+                    newDiv.appendChild(parentDiv);
+                    contentWrapperWP.append(newDiv);
+                }
+
+                function transformNoteleStudentului() {
+                    const table = document.querySelector(
+                        "table#ctl00_WebPartManagerPanel1_WebPartManager1_wp1631116538_wp758412774_GridViewNote"
+                    );
+                    if (!table) return;
+
+                    const rows = table.querySelectorAll("tbody tr");
+                    const data = [];
+                    rows.forEach((row, index) => {
+                        if (index === 0) return; // Skip header
+                        const cells = row.querySelectorAll("td");
+                        if (cells.length >= 7) {
+                            data.push({
+                                detalii: cells[0].innerText.trim(),
+                                anUniv: cells[1].innerText.trim(),
+                                semestru: cells[2].innerText.trim(),
+                                disciplina: cells[3].innerText.trim(),
+                                notaFinala: cells[4].innerText.trim(),
+                                credite: cells[5].innerText.trim(),
+                                data: cells[6].innerText.trim(),
+                            });
+                        }
+                    });
+
+                    const newDiv = document.createElement("div");
+                    newDiv.id = "newNoteleStudentului";
+                    newDiv.innerHTML = "<h2>Notele studentului</h2>";
+                    data.forEach((item) => {
+                        const itemDiv = document.createElement("div");
+                        itemDiv.className = "nota-info";
+                        itemDiv.innerHTML = `
+                      <span><strong>Detalii:</strong><p>${item.detalii}</p></span>
+                      <span><strong>AnUniv:</strong><p>${item.anUniv}</p></span>
+                      <span><strong>Semestru:</strong><p>${item.semestru}</p></span>
+                      <span><strong>Denumire disciplina:</strong><p>${item.disciplina}</p></span>
+                      <span><strong>Nota finala:</strong><p>${item.notaFinala}</p></span>
+                      <span><strong>Credite:</strong><p>${item.credite}</p></span>
+                      <span><strong>Data:</strong><p>${item.data}</p></span>
+                  `;
+                        newDiv.appendChild(itemDiv);
+                    });
+
+                    contentWrapperWP.append(newDiv);
+                }
+
+                function transformDetaliiTraiectorie() {
+                    const table = document.querySelector(
+                        "table#ctl00_WebPartManagerPanel1_WebPartManager1_wp922026677_wp938475116_GridView1"
+                    );
+                    if (!table) return;
+
+                    const rows = table.querySelectorAll("tbody tr");
+                    const data = [];
+                    rows.forEach((row, index) => {
+                        if (index === 0) return; // Skip header
+                        const cells = row.querySelectorAll("td");
+                        if (cells.length >= 8) {
+                            data.push({
+                                anStudiu: cells[0].innerText.trim(),
+                                anUniv: cells[1].innerText.trim(),
+                                semestru: cells[2].innerText.trim(),
+                                grupa: cells[3].innerText.trim(),
+                                specializare: cells[4].innerText.trim(),
+                                profil: cells[5].innerText.trim(),
+                                facultate: cells[6].innerText.trim(),
+                                universitate: cells[7].innerText.trim(),
+                            });
+                        }
+                    });
+
+                    const newDiv = document.createElement("div");
+                    newDiv.id = "newDetaliiTraiectorie";
+                    newDiv.innerHTML = "<h2>Detalii traiectorie</h2>";
+                    data.forEach((item) => {
+                        const itemDiv = document.createElement("div");
+                        itemDiv.className = "traiectorie-info";
+                        itemDiv.innerHTML = `
+                          <span><strong>An Studiu:</strong><p>${item.anStudiu}</p></span>
+                          <span><strong>An Univ:</strong><p>${item.anUniv}</p></span>
+                          <span><strong>Semestru:</strong><p>${item.semestru}</p></span>
+                          <span><strong>Grupa:</strong><p>${item.grupa}</p></span>
+                          <span><strong>Specializare:</strong><p>${item.specializare}</p></span>
+                          <span><strong>Profil:</strong><p>${item.profil}</p></span>
+                          <span><strong>Facultate:</strong><p>${item.facultate}</p></span>
+                          <span><strong>Universitate:</strong><p>${item.universitate}</p></span>
+                      `;
+
+                        newDiv.appendChild(itemDiv);
+                    });
+
+                    contentWrapperWP.append(newDiv);
+                }
+
+                function transformTraiectorieMedii() {
+                    const table = document.querySelector(
+                        "table#ctl00_WebPartManagerPanel1_WebPartManager1_wp1381958556_wp815042676_GridViewMedii"
+                    );
+                    if (!table) return;
+
+                    const rows = table.querySelectorAll("tbody tr");
+                    const data = [];
+                    rows.forEach((row, index) => {
+                        if (index === 0) return; // Skip header
+                        const cells = row.querySelectorAll("td");
+                        if (cells.length >= 9) {
+                            data.push({
+                                semestru: cells[0].innerText.trim(),
+                                medieAritm: cells[1].innerText.trim(),
+                                medieECTS: cells[2].innerText.trim(),
+                                puncte: cells[3].innerText.trim(),
+                                credite: cells[4].innerText.trim(),
+                                medieAritmAn: cells[5].innerText.trim(),
+                                medieECTSAn: cells[6].innerText.trim(),
+                                puncteAn: cells[7].innerText.trim(),
+                                crediteAn: cells[8].innerText.trim(),
+                            });
+                        }
+                    });
+
+                    const newDiv = document.createElement("div");
+                    newDiv.id = "updatedTraiectorieMedii";
+                    newDiv.innerHTML = "<h2>Mediile traiectoriei</h2>";
+                    const parentDiv = document.createElement("div");
+                    parentDiv.className = "medii-container";
+                    data.forEach((item) => {
+                        const itemDiv = document.createElement("div");
+                        itemDiv.className = "medii-info";
+                        itemDiv.innerHTML = `
+                          <span><strong>Semestru:</strong> <p>${item.semestru}</p></span>
+                          <span><strong>Medie Aritm:</strong> <p>${item.medieAritm}</p></span>
+                          <span><strong>Medie ECTS:</strong> <p>${item.medieECTS}</p></span>
+                          <span><strong>Puncte:</strong> <p>${item.puncte}</p></span>
+                          <span><strong>Credite:</strong> <p>${item.credite}</p></span>
+                          <span><strong>Medie Aritm An:</strong> <p>${item.medieAritmAn}</p></span>
+                          <span><strong>Medie ECTS An:</strong> <p>${item.medieECTSAn}</p></span>
+                          <span><strong>Puncte An:</strong> <p>${item.puncteAn}</p></span>
+                          <span><strong>Credite An:</strong> <p>${item.crediteAn}</p></span>
+                      `;
+
+                        parentDiv.appendChild(itemDiv);
+                    });
+
+                    newDiv.appendChild(parentDiv);
+                    contentWrapperWP.append(newDiv);
+                }
+
+                function transformObligatiilePlataStudent() {
+                    const table = document.querySelector(
+                        "table#ctl00_WebPartManagerPanel1_WebPartManager1_wp585798598_wp880472105_GridViewTaxe"
+                    );
+                    if (!table) return;
+
+                    const rows = table.querySelectorAll("tbody tr");
+                    const data = [];
+                    rows.forEach((row, index) => {
+                        if (index === 0) return; // Skip header row
+                        const cells = row.querySelectorAll("td");
+                        if (cells.length >= 6) {
+                            data.push({
+                                den: cells[0].innerText.trim(),
+                                suma: cells[1].innerText.trim(),
+                                moneda: cells[2].innerText.trim(),
+                                semestru: cells[3].innerText.trim(),
+                                anUniv: cells[4].innerText.trim(),
+                                platit: cells[5].innerText.trim(),
+                            });
+                        }
+                    });
+
+                    const newDiv = document.createElement("div");
+                    newDiv.id = "obligatiilePlataTransformed";
+                    newDiv.innerHTML =
+                        "<h2>Obligațiile de plată ale studentului</h2>";
+                    const parentDiv = document.createElement("div");
+                    parentDiv.className = "taxe-container";
+                    data.forEach((item) => {
+                        const itemDiv = document.createElement("div");
+                        itemDiv.className = "taxe-info";
+                        itemDiv.innerHTML = `
+                          <p><strong>Den:</strong> ${item.den}</p>
+                          <p><strong>Suma:</strong> ${item.suma}</p>
+                          <p><strong>Moneda:</strong> ${item.moneda}</p>
+                          <p><strong>Semestru:</strong> ${item.semestru}</p>
+                          <p><strong>AnUniv:</strong> ${item.anUniv}</p>
+                          <p><strong>Platit:</strong> ${item.platit}</p>
+                      `;
+                        parentDiv.appendChild(itemDiv);
+                    });
+
+                    newDiv.appendChild(parentDiv);
+                    contentWrapperWP.append(newDiv);
+                }
+
+                function transformDocumentelePlata() {
+                    const table = document.querySelector(
+                        "table#ctl00_WebPartManagerPanel1_WebPartManager1_wp363459202_wp512888434_GridViewDocPlata"
+                    );
+                    if (!table) return;
+
+                    const rows = table.querySelectorAll("tbody tr");
+                    const data = [];
+                    rows.forEach((row, index) => {
+                        if (index === 0) return; // Skip header row
+                        const cells = row.querySelectorAll("td");
+                        if (cells.length >= 4) {
+                            data.push({
+                                den: cells[0].innerText.trim(),
+                                nrDocPlata: cells[1].innerText.trim(),
+                                dataDoc: cells[2].innerText.trim(),
+                                suma: cells[3].innerText.trim(),
+                            });
+                        }
+                    });
+
+                    const newDiv = document.createElement("div");
+                    newDiv.id = "documentelePlataTransformed";
+                    newDiv.innerHTML =
+                        "<h2>Documentele de plată ale studentului</h2>";
+                    const parentDiv = document.createElement("div");
+                    parentDiv.className = "plata-container";
+                    data.forEach((item) => {
+                        const itemDiv = document.createElement("div");
+                        itemDiv.className = "plata-info";
+                        itemDiv.innerHTML = `
+                          <span><strong>Den:</strong> <p>${item.den}</p></span>
+                          <span><strong>NrDocPlata:</strong> <p>${item.nrDocPlata}</p></span>
+                          <span><strong>DataDoc:</strong> <p>${item.dataDoc}</p></span>
+                          <span><strong>Suma:</strong> <p>${item.suma}</p></span>
+                      `;
+                        parentDiv.appendChild(itemDiv);
+                    });
+
+                    newDiv.appendChild(parentDiv);
+                    contentWrapperWP.append(newDiv);
+                }
+
+                function transformIstoriculPlatilor() {
+                    const table = document.querySelector(
+                        "table#ctl00_WebPartManagerPanel1_WebPartManager1_wp975733793_wp2073478443_GridViewTaxe"
+                    );
+                    if (!table) return;
+
+                    const rows = table.querySelectorAll("tbody tr");
+                    const data = [];
+                    rows.forEach((row, index) => {
+                        if (index === 0) return; // Skip header row
+                        const cells = row.querySelectorAll("td");
+                        if (cells.length >= 5) {
+                            data.push({
+                                sursa: cells[0].innerText.trim(),
+                                sursaVal: cells[1].innerText.trim(),
+                                destinatie: cells[2].innerText.trim(),
+                                destVal: cells[3].innerText.trim(),
+                                dataM: cells[4].innerText.trim(),
+                            });
+                        }
+                    });
+
+                    const newDiv = document.createElement("div");
+                    newDiv.id = "istoriculPlatilorTransformed";
+                    newDiv.innerHTML =
+                        "<h2>Istoricul plăților studentului</h2>";
+                    const parentDiv = document.createElement("div");
+                    parentDiv.className = "istoric-container";
+                    data.forEach((item) => {
+                        const itemDiv = document.createElement("div");
+                        itemDiv.className = "istoric-info";
+                        itemDiv.innerHTML = `
+                        <span><strong>Sursa:</strong> <p>${item.sursa}</p></span>
+                        <span><strong>SursaVal:</strong> <p>${item.sursaVal}</p></span>
+                        <span><strong>Destinatie:</strong> <p>${item.destinatie}</p></span>
+                        <span><strong>DestVal:</strong> <p>${item.destVal}</p></span>
+                        <span><strong>DataM:</strong> <p>${item.dataM}</p></span>
+                    `;
+                        parentDiv.appendChild(itemDiv);
+                    });
+
+                    newDiv.appendChild(parentDiv);
+                    contentWrapperWP.append(newDiv);
+                }
+
+                transformDetaliiStudent();
+                transformNoteleStudentului();
+                transformDetaliiTraiectorie();
+                transformTraiectorieMedii();
+                transformObligatiilePlataStudent();
+                transformDocumentelePlata();
+                transformIstoriculPlatilor();
+
+                const floatWrapper = document.querySelector("#floatwrapperX");
+                floatWrapper.remove();
+
+                loadingBox.remove();
             }
         }
 
+        console.info("UserScript executed succesfully!");
     });
 })();
-
