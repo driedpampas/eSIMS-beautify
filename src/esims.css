@@ -68,7 +68,7 @@ body {
 }
 
 /* NAVbar & buttons */
-#table-replacement {
+#table-replacement:not(:has(#logout-page-button)) {
     display: flex;
     justify-content: flex-end;
 }
@@ -97,10 +97,24 @@ body {
     position: unset;
 }
 
+#search:has(#logout-page-button) {
+    justify-content: space-between;
+}
+
 #search,
 #login-page-button {
     width: 100%;
     display: flex;
+}
+
+#user-login-name {
+    border: none;
+    cursor: text;
+    padding: 8px 12px;
+    font-size: 10pt;
+    margin: 5px 5px;
+    border-radius: 4px;
+    background-color: rgba(0, 55, 86, .5);
 }
 
 #mainnav {
@@ -130,7 +144,7 @@ button.account {
     border-radius: 4px;
 }
 
-div#user {
+div#user:not(:has(#logout-page-button)) {
     display: flex;
     justify-content: center;
 }
@@ -147,7 +161,7 @@ div#user {
     }
 }
 
-#wrapper {
+#wrapper:not(:has(#contentwrapperWP)) {
     background-image: none;
     background-color: #FFFFFF;
     width: 620px;
@@ -202,6 +216,7 @@ div#user {
     margin: 0;
 }
 
+#subnav,
 .sidebarcontainer {
     padding: 6px;
     background: none;
@@ -210,6 +225,7 @@ div#user {
     /*border-radius: 8px;*/
 }
 
+#subnav h4,
 .sidebarcontainer h4 {
     margin-bottom: 10px;
     font-size: 18px;
@@ -219,6 +235,7 @@ div#user {
     color: white;
 }
 
+#subnav ul,
 .sidebarcontainer ul {
     list-style: none;
     padding-left: 0;
@@ -226,27 +243,32 @@ div#user {
     color: #333;
 }
 
+#subnav ul li,
 .sidebarcontainer ul li {
     margin: 10px 0;
     position: relative;
     font-size: 16px;
 }
 
+#subnav a,
 .sidebarcontainer a {
     text-decoration: none;
     color: white;
     font-size: 16px;
 }
 
+#subav a svg,
 .sidebarcontainer a svg {
     margin-left: 0.5em;
     width: 12px;
 }
 
+#subnav a:hover,
 .sidebarcontainer a:hover {
     text-decoration: underline;
 }
 
+#subnav br,
 .sidebarcontainer br {
     display: none;
 }
@@ -338,7 +360,7 @@ div.container:nth-child(1) > h5:nth-child(5) {
     color: white;
 }
 
-/* Passowrd Recovery Page */
+/* Pasword Recovery Page */
 [data-darkreader-scheme="dark"] {
     legend {
         color: #FFF !important;
@@ -439,7 +461,7 @@ input[type="checkbox"] {
     margin-right: 10px;
 }
 
-.submit {
+.login-button {
     padding: 10px 20px;
     background-color: hsl(0, 84%, 56%);
     color: white;
@@ -450,7 +472,7 @@ input[type="checkbox"] {
     width: 100%;
 }
 
-.submit:hover {
+.login-button:hover {
     background-color: hsl(0, 84%, 62%);
 }
 
@@ -501,4 +523,110 @@ button#register {
 
 button:hover#register {
     background-color: #45a049;
+}
+
+/* Logged in */
+#ctl00_LoginName1 {
+    display: none;
+}
+
+#subnav svg {
+    margin-right: 0.5em;
+}
+
+#subnav a{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#leftcolumn {
+    max-width: 280px;   
+}
+
+/* Pagina studentului */
+#copyH {
+    display: none;
+}
+
+#newCopyX {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#newCopyX > div:nth-child(1) {
+    display: none;
+}
+
+.student-info, .nota-info, .traiectorie-info, .medii-container, .medii-info, .taxe-container, .taxe-info, .plata-container, .plata-info, .istoric-container, .istoric-info {
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    justify-content: space-around;
+    gap: 10px;
+}
+
+.student-info a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.student-info a:hover {
+    text-decoration: underline;
+}
+
+#centercolumnX:has(#copyH) > * > span {
+    margin: 5px 0;    
+}
+
+body:has(#contentwrapperWP) {
+    overflow: hidden;
+}
+
+#wrapper:has(#contentwrapperWP) {
+    width: fit-content;
+    flex-direction: column-reverse;
+    overflow: auto;
+    justify-content: center;
+    align-items: center;
+    height: 90vh;
+    background-image: none;
+    background-color: #FFFFFF;
+    position: relative;
+    top: 12px;
+    max-width: 1200px;
+    padding: 0px 20px;
+    box-shadow: 0px 4px 12px rgba(0, 55, 86, .6);
+    border: none;
+    display: flex;
+}
+
+#contentwrapperWP {
+    padding: 10px 0px 20px 0px;
+    margin-left: 0;
+    overflow: auto;
+}
+
+body:has(#contentwrapperWP) #table-replacement {
+    display: flex;
+}
+
+[data-darkreader-scheme="dark"] {
+    .student-info, .nota-info, .traiectorie-info, .medii-container, .medii-info, .taxe-container, .taxe-info, .plata-container, .plata-info, .istoric-container, .istoric-info {
+        border: 1px solid #000;
+        background-color: #2C2C2C;
+    }
+    
+    #wrapper:has(#contentwrapperWP) {
+        background-color: #000000;
+    }
+    
+    #contentwrapperWP {
+        border: none;
+    }
 }
